@@ -13,15 +13,17 @@ def generator(data, batch_size, img_ch, img_cols, img_rows):
 
 
 def test_big(args):
-    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.dev
-    names_path = r"C:\Users\Aliab\PycharmProjects\data_small\test"
+    #os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    #os.environ["CUDA_VISIBLE_DEVICES"] = args.dev
+    G = args.gpus
+
+    names_path = '../dataset/test'  #../dataset/test
     print("Names to test: {}".format(names_path))
 
-    dataset_path = r"D:\gazecapture_small"
+    dataset_path = '../data'  #../data
     print("Dataset: {}".format(names_path))
 
-    weights_path = r"weights.hdf5"
+    weights_path = "best_weights.hdf5"
     print("Weights: {}".format(weights_path))
 
     # image parameter
@@ -38,7 +40,6 @@ def test_big(args):
 
     # model summary
     model.summary()
-
     # weights
     print("Loading weights...")
     model.load_weights(weights_path)

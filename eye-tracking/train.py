@@ -1,9 +1,11 @@
 import os
 from keras.optimizers import SGD, Adam
-from keras.callbacks import  EarlyStopping, ModelCheckpoint, History
+from keras.callbacks import  EarlyStopping, ModelCheckpoint, History, ReduceLROnPlateau
 from load_data import load_data_from_npz, load_batch, load_data_names, load_batch_from_names_random
 from model_vgg import get_eye_tracker_model
-
+import tensorflow as tf
+from keras.utils.training_utils import multi_gpu_model
+from alt_model_checkpoint import AltModelCheckpoint
 
 # generator for data loaded from the npz file
 def generator_npz(data, batch_size, img_ch, img_cols, img_rows):
@@ -32,22 +34,21 @@ def generator_val_data(names, path, batch_size, img_ch, img_cols, img_rows):
 
 def train(args):
 
-    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.dev
+    #getting gpu parameters
+    G = args.gpus
+    #os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    #os.environ["CUDA_VISIBLE_DEVICES"] = args.dev
 
     #todo: manage parameters in main
     if args.data == "big":
-        dataset_path = r"D:\gazecapture_small"
-    if args.data == "small":
-        dataset_path = "/cvgl/group/GazeCapture/eye_tracker_train_and_val.npz"
+        dataset_path = '../data'  #../data
 
     if args.data == "big":
-        train_path = r"C:\Users\Aliab\PycharmProjects\data_small\train"
-        val_path = r"C:\Users\Aliab\PycharmProjects\data_small\validation"
-        test_path = r"C:\Users\Aliab\PycharmProjects\data_small\test"
+        train_path = '../dataset/train'
+        val_path = '../dataset/train'
+        test_path = "../dataset/test"   #../dataset/test
 
     print("{} dataset: {}".format(args.data, dataset_path))
-
     # train parameters
     n_epoch = args.max_epoch
     batch_size = args.batch_size
@@ -58,12 +59,21 @@ def train(args):
     img_rows = 128
     img_ch = 3
 
-    # model
-    model = get_eye_tracker_model(img_ch, img_cols, img_rows)
+    # using multiGPU for training
+    if G <= 1:
+        print("[INFO] training with 1 GPU ...")
+        model = get_eye_tracker_model(img_ch, img_cols, img_rows)
+    else:
+        with tf.device("/cpu:0"):
+            # model
+            print("[INFO] training with {} GPU ...".format(G))
+            model = get_eye_tracker_model(img_ch, img_cols, img_rows)
+        parallel_model = multi_gpu_model(model, gpus=G)
+
 
     # model summary
-    model.summary()
 
+    model.summary()
     # weights
     # print("Loading weights...",  end='')
     # weights_path = "weights/weights.003-4.05525.hdf5"
@@ -71,11 +81,14 @@ def train(args):
     # print("Done.")
 
     # optimizer
-    sgd = SGD(lr=0.001, decay=1e-4, momentum=9e-1, nesterov=True)
+    sgd = SGD(lr=1e-2, decay=1e-4, momentum=9e-1, nesterov=True)
     adam = Adam(lr=1e-3)
 
     # compile model
-    model.compile(loss='mse', optimizer=sgd, metrics=['accuracy'])
+    parallel_model.compile(loss='mse', optimizer=sgd, metrics=['accuracy'])
+
+    # making variable lr for validation loss decrement
+    var_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1, mode='auto', min_lr=0)
 
     # data
     # todo: parameters not hardocoded
@@ -84,37 +97,31 @@ def train(args):
         train_names = load_data_names(train_path)
         # validation data
         val_names = load_data_names(val_path)
-        # test data
-        test_names = load_data_names(test_path)
-
-    if args.data == "small":
-        train_data, val_data = load_data_from_npz(dataset_path)
 
     # debug
     # x, y = load_batch([l[0:batch_size] for l in train_data], img_ch, img_cols, img_rows)
     # x, y = load_batch_from_names(train_names[0:batch_size], dataset_path, img_ch, img_cols, img_rows)
 
-    # last dataset checks
-    if args.data == "small":
-        print("train data sources of size: {} {} {} {} {}".format(
-            train_data[0].shape[0], train_data[1].shape[0], train_data[2].shape[0],
-            train_data[3].shape[0], train_data[4].shape[0]))
-        print("validation data sources of size: {} {} {} {} {}".format(
-            val_data[0].shape[0], val_data[1].shape[0], val_data[2].shape[0],
-            val_data[3].shape[0], val_data[4].shape[0]))
+    # model check point
+    model_check_pt = AltModelCheckpoint("best_weights.hdf5", model)
 
-    if args.data == "big":
-        history = History()
+    # Loading Previous model check
+    if "weights.hdf5" == True:
+        #weights path
+        # load model weights
+        weights_path = "weights.hdf5"
+        parallel_model.load_weights(weights_path)
 
-        history = model.fit_generator(
-            generator=generator_train_data(train_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
-            steps_per_epoch=(len(train_names)) / batch_size,
-            epochs=n_epoch,
-            verbose=1,
-            validation_data=generator_val_data(val_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
-            validation_steps=(len(val_names)) / batch_size,
-            callbacks=[EarlyStopping(patience=patience), history,
-                       ModelCheckpoint(r"weights.hdf5", monitor='val_loss', save_best_only=True)
-                       ]
+    # record the history
+    history = History()
+    # fitting the model
+    history = parallel_model.fit_generator(
+        generator=generator_train_data(train_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
+        steps_per_epoch=(len(train_names)) / batch_size,
+        epochs=n_epoch,
+        verbose=1,
+        validation_data=generator_val_data(val_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
+        validation_steps=(len(val_names)) / batch_size,
+        callbacks=[EarlyStopping(patience=patience), history, var_lr, model_check_pt]
         )
-        print(history.history)
+    print(history.history)
