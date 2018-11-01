@@ -5,7 +5,7 @@ from load_data import load_data_from_npz, load_batch, load_data_names, load_batc
 from model_vgg import get_eye_tracker_model
 import tensorflow as tf
 from keras.utils.training_utils import multi_gpu_model
-from alt_model_checkpoint import AltModelCheckpoint
+from keras.models import save_model, load_model
 
 # generator for data loaded from the npz file
 def generator_npz(data, batch_size, img_ch, img_cols, img_rows):
@@ -73,7 +73,7 @@ def train(args):
 
     # model summary
 
-    model.summary()
+    parallel_model.summary()
     # weights
     # print("Loading weights...",  end='')
     # weights_path = "weights/weights.003-4.05525.hdf5"
@@ -103,25 +103,37 @@ def train(args):
     # x, y = load_batch_from_names(train_names[0:batch_size], dataset_path, img_ch, img_cols, img_rows)
 
     # model check point
-    model_check_pt = AltModelCheckpoint("best_weights.hdf5", model)
 
     # Loading Previous model check
-    if "weights.hdf5" == True:
-        #weights path
+    model_file = "model.hdf5"
+    if os.path.isfile(model_file):
         # load model weights
-        weights_path = "weights.hdf5"
-        parallel_model.load_weights(weights_path)
+        print('model loaded successfully....')
+        model = load_model("model.hdf5")
 
     # record the history
     history = History()
+
     # fitting the model
-    history = parallel_model.fit_generator(
-        generator=generator_train_data(train_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
-        steps_per_epoch=(len(train_names)) / batch_size,
-        epochs=n_epoch,
-        verbose=1,
-        validation_data=generator_val_data(val_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
-        validation_steps=(len(val_names)) / batch_size,
-        callbacks=[EarlyStopping(patience=patience), history, var_lr, model_check_pt]
-        )
-    print(history.history)
+    i = 1
+    import numpy as np
+    min_val_loss = np.inf
+    history = History()
+    while i <= 100:
+        history = parallel_model.fit_generator(
+            generator=generator_train_data(train_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
+            steps_per_epoch=(len(train_names)) / batch_size,
+            epochs=1,
+            verbose=1,
+            validation_data=generator_val_data(val_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
+            validation_steps=(len(val_names)) / batch_size,
+            callbacks=[EarlyStopping(patience=patience), var_lr]
+            )
+
+        # check if the loss reduced then save the model
+        if history.history['val_loss'][0] < min_val_loss:
+            min_val_loss = history.history['val_loss'][0]
+            print("saving weights with val_loss {val_loss}".format(val_loss=history.history['val_loss'][0],
+                                                                   val_acc=history.history['val_acc'][0]))
+            save_model(model, "model.hdf5")
+        i = i + 1
