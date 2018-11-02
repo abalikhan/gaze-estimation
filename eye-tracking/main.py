@@ -1,5 +1,5 @@
 import argparse
-from train_1gpu import train   # needs to be changed before sending to server
+from train import train   # needs to be changed before sending to server
 from test_small import test_small
 from test_big import test_big
 
@@ -11,8 +11,8 @@ if __name__ == '__main__':
     parser.add_argument('-max_epoch', '--max_epoch', type=int, default=100, help='max number of iterations (default 100)')
     parser.add_argument('-batch_size', type=int, default=100, help='batch size (default 50)')
     parser.add_argument('-patience', type=int, default=10, help='early stopping patience (default 10)')
-    #parser.add_argument('-dev', type=str, default="0", help='what cpu or gpu (recommended) use to train the model')
-    parser.add_argument("-gpus", "--gpus", type=int, default=3, help="# of GPUs to use for training")
+    parser.add_argument('-dev', type=str, default="0,1", help='what cpu or gpu (recommended) use to train the model')
+    parser.add_argument("-gpus", "--gpus", type=int, default=1, help="# of GPUs to use for training")
     args = parser.parse_args()
     # train
     if args.train:

@@ -35,9 +35,9 @@ def generator_val_data(names, path, batch_size, img_ch, img_cols, img_rows):
 def train(args):
 
     #getting gpu parameters
-    G = args.gpus
-    #os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    #os.environ["CUDA_VISIBLE_DEVICES"] = args.dev
+    # G = args.gpus
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.dev
 
     #todo: manage parameters in main
     if args.data == "big":
@@ -60,20 +60,12 @@ def train(args):
     img_ch = 3
 
     # using multiGPU for training
-    if G <= 1:
-        print("[INFO] training with 1 GPU ...")
-        model = get_eye_tracker_model(img_ch, img_cols, img_rows)
-    else:
-        with tf.device("/cpu:0"):
-            # model
-            print("[INFO] training with {} GPU ...".format(G))
-            model = get_eye_tracker_model(img_ch, img_cols, img_rows)
-        parallel_model = multi_gpu_model(model, gpus=G)
+    model = get_eye_tracker_model(img_ch, img_cols, img_rows)
 
 
     # model summary
 
-    parallel_model.summary()
+    model.summary()
     # weights
     # print("Loading weights...",  end='')
     # weights_path = "weights/weights.003-4.05525.hdf5"
@@ -85,10 +77,13 @@ def train(args):
     adam = Adam(lr=1e-3)
 
     # compile model
-    parallel_model.compile(loss='mse', optimizer=sgd, metrics=['accuracy'])
+    model.compile(loss='mse', optimizer=sgd, metrics=['accuracy'])
 
     # making variable lr for validation loss decrement
-    var_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1, mode='auto', min_lr=0)
+    var_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, verbose=1, mode='auto', min_lr=0)
+
+    # Modelcheckpoint to save the weights
+    Mdl_chk_pnt = ModelCheckpoint('model.hdf5', save_best_only=True, verbose=1, monitor='val_loss', mode='auto')
 
     # data
     # todo: parameters not hardocoded
@@ -109,31 +104,32 @@ def train(args):
     if os.path.isfile(model_file):
         # load model weights
         print('model loaded successfully....')
-        model = load_model("model.hdf5")
+        model = load_model(model_file)
 
     # record the history
     history = History()
 
     # fitting the model
-    i = 1
-    import numpy as np
-    min_val_loss = np.inf
-    history = History()
-    while i <= 100:
-        history = parallel_model.fit_generator(
-            generator=generator_train_data(train_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
-            steps_per_epoch=(len(train_names)) / batch_size,
-            epochs=1,
-            verbose=1,
-            validation_data=generator_val_data(val_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
-            validation_steps=(len(val_names)) / batch_size,
-            callbacks=[EarlyStopping(patience=patience), var_lr]
-            )
+    # i = 1
+    # import numpy as np
+    # min_val_loss = np.inf
+    # while i <= 100:
+
+    history = model.fit_generator(
+        generator=generator_train_data(train_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
+        steps_per_epoch=(len(train_names)) / batch_size,
+        epochs=1,
+        verbose=1,
+        validation_data=generator_val_data(val_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
+        validation_steps=(len(val_names)) / batch_size,
+        callbacks=[EarlyStopping(patience=patience), var_lr, Mdl_chk_pnt]
+        )
+    print(history.history['val_loss'])
 
         # check if the loss reduced then save the model
-        if history.history['val_loss'][0] < min_val_loss:
-            min_val_loss = history.history['val_loss'][0]
-            print("saving weights with val_loss {val_loss}".format(val_loss=history.history['val_loss'][0],
-                                                                   val_acc=history.history['val_acc'][0]))
-            save_model(model, "model.hdf5")
-        i = i + 1
+        # if history.history['val_loss'][0] < min_val_loss:
+        #     min_val_loss = history.history['val_loss'][0]
+        #     print("saving weights with val_loss {val_loss}".format(val_loss=history.history['val_loss'][0],
+        #                                                            val_acc=history.history['val_acc'][0]))
+        #     save_model(model, "model.hdf5")
+        # i = i + 1
