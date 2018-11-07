@@ -76,6 +76,13 @@ def train(args):
     sgd = SGD(lr=1e-2, decay=1e-4, momentum=9e-1, nesterov=True)
     adam = Adam(lr=1e-3, decay=1e-5)
 
+    # Loading Previous model check
+    model_file = "model.hdf5"
+    if os.path.isfile(model_file):
+        # load model weights
+        print('model loaded successfully....')
+        model = load_model(model_file)
+
     # compile model
     model.compile(loss='mse', optimizer=adam, metrics=['accuracy'])
 
@@ -96,16 +103,6 @@ def train(args):
     # debug
     # x, y = load_batch([l[0:batch_size] for l in train_data], img_ch, img_cols, img_rows)
     # x, y = load_batch_from_names(train_names[0:batch_size], dataset_path, img_ch, img_cols, img_rows)
-
-    # model check point
-
-    # Loading Previous model check
-    model_file = "model.hdf5"
-    if os.path.isfile(model_file):
-        # load model weights
-        print('model loaded successfully....')
-        model = load_model(model_file)
-
     # record the history
     history = History()
 
