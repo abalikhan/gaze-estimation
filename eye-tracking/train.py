@@ -74,13 +74,13 @@ def train(args):
 
     # optimizer
     sgd = SGD(lr=1e-2, decay=1e-4, momentum=9e-1, nesterov=True)
-    adam = Adam(lr=1e-3)
+    adam = Adam(lr=1e-3, decay=1e-5)
 
     # compile model
-    model.compile(loss='mse', optimizer=sgd, metrics=['accuracy'])
+    model.compile(loss='mse', optimizer=adam, metrics=['accuracy'])
 
     # making variable lr for validation loss decrement
-    var_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, verbose=1, mode='auto', min_lr=0)
+    var_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=1, verbose=1, mode='auto', min_lr=0)
 
     # Modelcheckpoint to save the weights
     Mdl_chk_pnt = ModelCheckpoint('model.hdf5', save_best_only=True, verbose=1, monitor='val_loss', mode='auto')
@@ -118,7 +118,7 @@ def train(args):
     history = model.fit_generator(
         generator=generator_train_data(train_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
         steps_per_epoch=(len(train_names)) / batch_size,
-        epochs=1,
+        epochs=n_epoch,
         verbose=1,
         validation_data=generator_val_data(val_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
         validation_steps=(len(val_names)) / batch_size,
