@@ -1,7 +1,8 @@
 import argparse
-from train import train   # needs to be changed before sending to server
+from train import train
 from test_small import test_small
 from test_big import test_big
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -9,15 +10,14 @@ if __name__ == '__main__':
     parser.add_argument('-test', action='store_true', help='train flag')
     parser.add_argument('-data', type=str, default='big', help='which dataset, small or big')
     parser.add_argument('-max_epoch', '--max_epoch', type=int, default=100, help='max number of iterations (default 100)')
-    parser.add_argument('-batch_size', type=int, default=100, help='batch size (default 50)')
+    parser.add_argument('-batch_size', type=int, default=256, help='batch size (default 50)')
     parser.add_argument('-patience', type=int, default=10, help='early stopping patience (default 10)')
-    parser.add_argument('-dev', type=str, default="0,1", help='what cpu or gpu (recommended) use to train the model')
-    parser.add_argument("-gpus", "--gpus", type=int, default=1, help="# of GPUs to use for training")
+    parser.add_argument('-dev', type=str, default="1", help='what cpu or gpu (recommended) use to train the model')
     args = parser.parse_args()
+
     # train
     if args.train:
         train(args)
-
 
     # test on small dataset
     if args.test and args.data == "small":
@@ -26,3 +26,4 @@ if __name__ == '__main__':
     # test on original dataset
     if args.test and args.data == "big":
         test_big(args)
+
