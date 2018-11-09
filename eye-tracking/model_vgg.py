@@ -1,6 +1,6 @@
 import numpy as np
 from keras.layers import Layer
-from keras.layers import Input, Conv2D, Dense, Flatten, MaxPool2D, concatenate
+from keras.layers import Input, Conv2D, Dense, Flatten, MaxPool2D, concatenate, Dropout
 from keras.models import Model
 
 
@@ -28,25 +28,40 @@ last_activation = 'linear'
 # eye model
 def get_eye_model(img_cols, img_rows, img_ch):
 
-    eye_img_input = Input(shape=(img_cols, img_rows, img_ch))
-
-    h = Conv2D(64, (3, 3), activation=activation, padding='same')(eye_img_input)
+    eye_img_input = Input(shape=(img_cols, img_rows, img_ch))(eye_img_input)
+    h = Conv2D(64, (3, 3), activation=activation, padding='same')(h)
     h = MaxPool2D(pool_size=(2, 2), strides=(2,2))(h)
+    h = (Dropout(0.25))(h)
+
     h = Conv2D(128, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(128, (3, 3), activation=activation, padding='same')(h)
     h = MaxPool2D(pool_size=(2,2), strides=(2,2))(h)
+    h = (Dropout(0.25))(h)
+
     h = Conv2D(256, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(256, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(256, (3, 3), activation=activation, padding='same')(h)
     h = MaxPool2D(pool_size=(2,2), strides=(2,2))(h)
+    h = (Dropout(0.25))(h)
+
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
     h = MaxPool2D(pool_size=(2,2), strides=(2,2))(h)
+    h = (Dropout(0.25))(h)
+
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
+    h = MaxPool2D(pool_size=(2,2), strides=(2,2))(h)
+    h = (Dropout(0.25))(h)
+
+    h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
+    h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
+    h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
+    h = (Dropout(0.25))(h)
     out = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(h)
+
     model = Model(inputs=eye_img_input, outputs=out)
 
     return model
@@ -56,23 +71,37 @@ def get_eye_model(img_cols, img_rows, img_ch):
 def get_face_model(img_cols, img_rows, img_ch):
 
     face_img_input = Input(shape=(img_cols, img_rows,img_ch))
-
     h = Conv2D(64, (3, 3), activation=activation, padding='same')(face_img_input)
-    h = MaxPool2D(pool_size=(2, 2), strides=(2,2))(h)
+    h = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(h)
+    h = (Dropout(0.25))(h)
+
     h = Conv2D(128, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(128, (3, 3), activation=activation, padding='same')(h)
-    h = MaxPool2D(pool_size=(2,2), strides=(2,2))(h)
+    h = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(h)
+    h = (Dropout(0.25))(h)
+
     h = Conv2D(256, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(256, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(256, (3, 3), activation=activation, padding='same')(h)
-    h = MaxPool2D(pool_size=(2,2), strides=(2,2))(h)
+    h = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(h)
+    h = (Dropout(0.25))(h)
+
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
-    h = MaxPool2D(pool_size=(2,2), strides=(2,2))(h)
+    h = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(h)
+    h = (Dropout(0.25))(h)
+
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
     h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
+    h = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(h)
+    h = (Dropout(0.25))(h)
+
+    h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
+    h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
+    h = Conv2D(512, (3, 3), activation=activation, padding='same')(h)
+    h = (Dropout(0.25))(h)
     out = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(h)
 
     model = Model(inputs=face_img_input, outputs=out)
@@ -81,14 +110,14 @@ def get_face_model(img_cols, img_rows, img_ch):
 
 
 # final model
-def get_eye_tracker_model(img_ch, img_cols, img_rows):
+def get_eye_tracker_model(img_cols, img_rows, img_ch):
 
     # get partial models
     eye_net = get_eye_model(img_cols, img_rows,img_ch)
-    face_net_part = get_face_model(img_cols, img_rows,img_ch)
+    face_net_part = get_face_model(img_cols, img_rows, img_ch)
 
     # right eye model
-    right_eye_input = Input(shape=(img_cols, img_rows,img_ch))
+    right_eye_input = Input(shape=(img_cols, img_rows, img_ch))
     right_eye_net = eye_net(right_eye_input)
 
     # left eye model
@@ -106,24 +135,31 @@ def get_eye_tracker_model(img_ch, img_cols, img_rows):
     e = concatenate([left_eye_net, right_eye_net])
     e = Flatten()(e)
     fc_e1 = Dense(256, activation=activation)(e)
+    fc_e1 = Dropout(0.5)(fc_e1)
 
     # dense layers for face
     f = Flatten()(face_net)
     fc_f1 = Dense(256, activation=activation)(f)
+    fc_f1 = Dropout(fc_f1)
+
   #  fc_f2 = Dense(64, activation=activation)(fc_f1)
 
     # dense layers for face grid
     fg = Flatten()(face_grid)
     fc_fg1 = Dense(256, activation=activation)(fg)
+    fc_fg1 = Dropout(0.5)(fc_fg1)
+
   #  fc_fg2 = Dense(128, activation=activation)(fc_fg1)
 
     # combining face and face grid in one flatten layer
     f_g = concatenate([fc_f1, fc_fg1])
     fc_fg2 = Dense(128, activation=activation)(f_g)
+    fc_fg2 = Dropout(0.5)(fc_fg2)
 
     # final dense layers
     h = concatenate([fc_e1, fc_fg2])
     fc1 = Dense(128, activation=activation)(h)
+    fc1 = Dropout(0.5)(fc1)
     fc2 = Dense(2, activation=last_activation)(fc1)
 
     # final model
