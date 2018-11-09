@@ -28,8 +28,8 @@ last_activation = 'linear'
 # eye model
 def get_eye_model(img_cols, img_rows, img_ch):
 
-    eye_img_input = Input(shape=(img_cols, img_rows, img_ch))(eye_img_input)
-    h = Conv2D(64, (3, 3), activation=activation, padding='same')(h)
+    eye_img_input = Input(shape=(img_cols, img_rows, img_ch))
+    h = Conv2D(64, (3, 3), activation=activation, padding='same')(eye_img_input)
     h = MaxPool2D(pool_size=(2, 2), strides=(2,2))(h)
     h = (Dropout(0.25))(h)
 
@@ -113,7 +113,7 @@ def get_face_model(img_cols, img_rows, img_ch):
 def get_eye_tracker_model(img_cols, img_rows, img_ch):
 
     # get partial models
-    eye_net = get_eye_model(img_cols, img_rows,img_ch)
+    eye_net = get_eye_model(img_cols, img_rows, img_ch)
     face_net_part = get_face_model(img_cols, img_rows, img_ch)
 
     # right eye model
@@ -140,7 +140,7 @@ def get_eye_tracker_model(img_cols, img_rows, img_ch):
     # dense layers for face
     f = Flatten()(face_net)
     fc_f1 = Dense(256, activation=activation)(f)
-    fc_f1 = Dropout(fc_f1)
+    fc_f1 = Dropout(0.5)(fc_f1)
 
   #  fc_f2 = Dense(64, activation=activation)(fc_f1)
 

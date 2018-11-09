@@ -40,10 +40,18 @@ def train(args):
     if args.data == "big":
         dataset_path = "../dataset/train"
 
+    # if args.data == 'small':
+    #     dataset_path = r'D:\gazecapture_small'
+
     if args.data == "big":
         train_path = "../dataset/train"
         val_path = "../dataset/validation"
         test_path = "../dataset/test"
+
+    # if args.data == 'small':
+    #     train_path = r'C:\Users\Aliab\PycharmProjects\data_small/train'
+    #     val_path = r'C:\Users\Aliab\PycharmProjects\data_small\validation'
+    #     test_path = r'C:\Users\Aliab\PycharmProjects\data_small\test'
 
     print("{} dataset: {}".format(args.data, dataset_path))
 
@@ -80,28 +88,26 @@ def train(args):
 
     # data
     # todo: parameters not hardocoded
-    if args.data == "big":
         # train data
-        train_names = load_data_names(train_path)
+    train_names = load_data_names(train_path)
         # validation data
-        val_names = load_data_names(val_path)
+    val_names = load_data_names(val_path)
         # test data
-        test_names = load_data_names(test_path)
+    test_names = load_data_names(test_path)
 
     # debug
     # x, y = load_batch([l[0:batch_size] for l in train_data], img_ch, img_cols, img_rows)
     # x, y = load_batch_from_names(train_names[0:batch_size], dataset_path, img_ch, img_cols, img_rows)
 
 
-    if args.data == "big":
-        model.fit_generator(
-            generator=generator_train_data(train_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
-            steps_per_epoch=(len(train_names)) / batch_size,
-            epochs=n_epoch,
-            verbose=1,
-            validation_data=generator_val_data(val_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
-            validation_steps=(len(val_names)) / batch_size,
-            callbacks=[EarlyStopping(patience=patience), red_lr,
+    model.fit_generator(
+        generator=generator_train_data(train_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
+        steps_per_epoch=(len(train_names)) / batch_size,
+        epochs=n_epoch,
+        verbose=1,
+        validation_data=generator_val_data(val_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
+        validation_steps=(len(val_names)) / batch_size,
+        callbacks=[EarlyStopping(patience=patience), red_lr,
                        ModelCheckpoint("weight_vgg.hdf5", monitor='val_loss', save_best_only=True, verbose=1)
                        ]
         )
