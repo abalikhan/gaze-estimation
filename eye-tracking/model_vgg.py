@@ -129,35 +129,30 @@ def get_eye_tracker_model(img_cols, img_rows, img_ch):
     face_net = face_net_part(face_input)
 
     # face grid
-    face_grid = Input(shape=(1, 25, 25))
+    face_grid = Input(shape=(25, 25, 1))
 
     # dense layers for eyes
     e = concatenate([left_eye_net, right_eye_net])
     e = Flatten()(e)
-    fc_e1 = Dense(256, activation=activation)(e)
+    fc_e1 = Dense(128, activation=activation)(e)
     fc_e1 = Dropout(0.5)(fc_e1)
 
     # dense layers for face
     f = Flatten()(face_net)
-    fc_f1 = Dense(256, activation=activation)(f)
-    fc_f1 = Dropout(0.5)(fc_f1)
-
-  #  fc_f2 = Dense(64, activation=activation)(fc_f1)
+    fc_f1 = Dense(128, activation=activation)(f)
+    fc_f2 = Dense(64, activation=activation)(fc_f1)
+    fc_f2 = Dropout(0.5)(fc_f2)
 
     # dense layers for face grid
     fg = Flatten()(face_grid)
     fc_fg1 = Dense(256, activation=activation)(fg)
-    fc_fg1 = Dropout(0.5)(fc_fg1)
-
-  #  fc_fg2 = Dense(128, activation=activation)(fc_fg1)
-
-    # combining face and face grid in one flatten layer
-    f_g = concatenate([fc_f1, fc_fg1])
-    fc_fg2 = Dense(128, activation=activation)(f_g)
+    fc_fg2 = Dense(128, activation=activation)(fc_fg1)
     fc_fg2 = Dropout(0.5)(fc_fg2)
 
+    # combining face and face grid in one flatten layer
+
     # final dense layers
-    h = concatenate([fc_e1, fc_fg2])
+    h = concatenate([fc_e1, fc_f2, fc_fg2])
     fc1 = Dense(128, activation=activation)(h)
     fc1 = Dropout(0.5)(fc1)
     fc2 = Dense(2, activation=last_activation)(fc1)

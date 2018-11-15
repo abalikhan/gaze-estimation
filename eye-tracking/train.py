@@ -1,8 +1,9 @@
 import os
 from keras.optimizers import SGD, Adam
-from keras.callbacks import  EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from load_data import load_batch, load_data_names, load_batch_from_names_random
 from model_vgg import get_eye_tracker_model
+from keras.models import load_model
 
 
 # generator for data loaded from the npz file
@@ -15,18 +16,18 @@ def generator_npz(data, batch_size, img_ch, img_cols, img_rows):
 
 
 # generator with random batch load (train)
-def generator_train_data(names, path, batch_size, img_ch, img_cols, img_rows):
+def generator_train_data(names, path, batch_size, img_cols, img_rows, img_ch):
 
     while True:
-        x, y = load_batch_from_names_random(names, path, batch_size, img_ch, img_cols, img_rows)
+        x, y = load_batch_from_names_random(names, path, batch_size, img_cols, img_rows, img_ch)
         yield x, y
 
 
 # generator with random batch load (validation)
-def generator_val_data(names, path, batch_size, img_ch, img_cols, img_rows):
+def generator_val_data(names, path, batch_size, img_cols, img_rows, img_ch):
 
     while True:
-        x, y = load_batch_from_names_random(names, path, batch_size, img_ch, img_cols, img_rows)
+        x, y = load_batch_from_names_random(names, path, batch_size, img_cols, img_rows, img_ch)
         yield x, y
 
 
@@ -38,20 +39,20 @@ def train(args):
     #todo: manage parameters in main
 
     if args.data == "big":
-        dataset_path = "../dataset/train"
+        dataset_path = "../data"
 
-    # if args.data == 'small':
-    #     dataset_path = r'D:\gazecapture_small'
+    if args.data == 'small':
+        dataset_path = r'D:\gazecapture_small'
 
     if args.data == "big":
         train_path = "../dataset/train"
         val_path = "../dataset/validation"
         test_path = "../dataset/test"
 
-    # if args.data == 'small':
-    #     train_path = r'C:\Users\Aliab\PycharmProjects\data_small/train'
-    #     val_path = r'C:\Users\Aliab\PycharmProjects\data_small\validation'
-    #     test_path = r'C:\Users\Aliab\PycharmProjects\data_small\test'
+    if args.data == 'small':
+        train_path = r'C:\Users\Aliab\PycharmProjects\data_small/train'
+        val_path = r'C:\Users\Aliab\PycharmProjects\data_small\validation'
+        test_path = r'C:\Users\Aliab\PycharmProjects\data_small\test'
 
     print("{} dataset: {}".format(args.data, dataset_path))
 
@@ -77,10 +78,16 @@ def train(args):
     # print("Done.")
 
     # optimizer
-    sgd = SGD(lr=0.001, decay=1e-6, momentum=0.5, nesterov=True)
+    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.6, nesterov=True)
     adam = Adam(lr=1e-3)
 
+    model_file = 'weight_vgg.hdf5'
+    if os.path.isfile(model_file):
+        print('model loaded successfully')
+        model = load_model(model_file)
+        model.load_weights(model_file)
     # compile model
+
     model.compile(optimizer=sgd, loss='mse', metrics=['accuracy'])
 
     # reduce learning rate
@@ -101,13 +108,13 @@ def train(args):
 
 
     model.fit_generator(
-        generator=generator_train_data(train_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
+        generator=generator_train_data(train_names, dataset_path, batch_size, img_cols, img_rows, img_ch),
         steps_per_epoch=(len(train_names)) / batch_size,
         epochs=n_epoch,
         verbose=1,
-        validation_data=generator_val_data(val_names, dataset_path, batch_size, img_ch, img_cols, img_rows),
+        validation_data=generator_val_data(val_names, dataset_path, batch_size, img_cols, img_rows, img_ch),
         validation_steps=(len(val_names)) / batch_size,
         callbacks=[EarlyStopping(patience=patience), red_lr,
-                       ModelCheckpoint("weight_vgg.hdf5", monitor='val_loss', save_best_only=True, verbose=1)
-                       ]
+                    ModelCheckpoint("weight_vgg.hdf5", monitor='val_loss', save_best_only=True, verbose=1)
+                    ]
         )
