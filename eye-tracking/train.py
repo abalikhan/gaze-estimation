@@ -4,6 +4,7 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from load_data import load_batch, load_data_names, load_batch_from_names_random
 from model_vgg import get_eye_tracker_model
 from keras.models import load_model
+from Euc_dist_loss import euclidean_distance_loss
 
 
 # generator for data loaded from the npz file
@@ -62,8 +63,8 @@ def train(args):
     patience = args.patience
 
     # image parameter
-    img_cols = 128
-    img_rows = 128
+    img_cols = 224
+    img_rows = 224
     img_ch = 3
 
     # model
@@ -84,11 +85,10 @@ def train(args):
     model_file = 'weight_vg.hdf5'
     if os.path.isfile(model_file):
         print('model loaded successfully')
-        model = load_model(model_file)
         model.load_weights(model_file)
     # compile model
 
-    model.compile(optimizer=sgd, loss='mse', metrics=['accuracy'])
+    model.compile(optimizer=sgd, loss=euclidean_distance_loss, metrics=['accuracy'])
 
     # reduce learning rate
     red_lr = ReduceLROnPlateau(factor=0.6, monitor='val_loss', patience=2, verbose=1, min_lr=0)
