@@ -52,7 +52,7 @@ def train(args):
     if args.data == 'small':
         train_path = r'C:\Users\Aliab\PycharmProjects\data_small/train'
         val_path = r'C:\Users\Aliab\PycharmProjects\data_small\validation'
-        test_path = r'C:\Users\Aliab\PycharmProjects\data_small\test'
+        test_path = r'C:\Users\Aliab\PycharmProjects\data\test'
 
     print("{} dataset: {}".format(args.data, dataset_path))
 
@@ -78,10 +78,10 @@ def train(args):
     # print("Done.")
 
     # optimizer
-    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.6, nesterov=True)
+    sgd = SGD(lr=0.001, decay=1e-6, momentum=0.6, nesterov=True)
     adam = Adam(lr=1e-3)
 
-    model_file = 'weight_vgg.hdf5'
+    model_file = 'weight_vg.hdf5'
     if os.path.isfile(model_file):
         print('model loaded successfully')
         model = load_model(model_file)
