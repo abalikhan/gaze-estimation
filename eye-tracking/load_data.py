@@ -5,6 +5,7 @@ import glob
 from os.path import join
 import json
 from data_utility import image_normalization
+from keras.applications.vgg16 import preprocess_input
 
 
 # load data directly from the npz file (small dataset, 48k and 5k for train and test)
@@ -241,7 +242,7 @@ def load_batch_from_names_random(names, path, batch_size, img_cols, img_rows, im
     left_eye_batch = np.zeros(shape=(batch_size, img_cols, img_rows, img_ch), dtype=np.float32)
     right_eye_batch = np.zeros(shape=(batch_size, img_cols, img_rows, img_ch), dtype=np.float32)
     face_batch = np.zeros(shape=(batch_size, img_cols, img_rows, img_ch), dtype=np.float32)
-    face_grid_batch = np.zeros(shape=(batch_size, 25, 25, 1), dtype=np.float32)
+    face_grid_batch = np.zeros(shape=(batch_size, 1, 25, 25), dtype=np.float32)
     y_batch = np.zeros((batch_size, 2), dtype=np.float32)
 
     # counter for check the size of loading batch
@@ -321,14 +322,16 @@ def load_batch_from_names_random(names, path, batch_size, img_cols, img_rows, im
         right_eye = img[tl_y:br_y, tl_x:br_x]
 
         # get face grid (in ch, cols, rows convention)
-        face_grid = np.zeros(shape=(25, 25, 1), dtype=np.float32)
+        face_grid = np.zeros(shape=(1, 25, 25), dtype=np.float32)
+        # print("initailly ",face_grid)
         tl_x = int(grid_json["X"][idx])
         tl_y = int(grid_json["Y"][idx])
         w = int(grid_json["W"][idx])
         h = int(grid_json["H"][idx])
         br_x = tl_x + w
         br_y = tl_y + h
-        face_grid[tl_y:br_y, tl_x:br_x, 0] = 1
+        face_grid[0, tl_y:br_y, tl_x:br_x] = 1
+        # print('face grid values', face_grid)
 
         # get labels
         y_x = dot_json["XCam"][idx]
@@ -341,15 +344,20 @@ def load_batch_from_names_random(names, path, batch_size, img_cols, img_rows, im
 
         # save images (for debug)
         if save_img:
-            cv2.imwrite("images/face.png", face)
-            cv2.imwrite("images/right.png", right_eye)
-            cv2.imwrite("images/left.png", left_eye)
-            cv2.imwrite("images/image.png", img)
+            cv2.imwrite(r"D\face.png", face)
+            cv2.imwrite(r"D:\right.png", right_eye)
+            cv2.imwrite(r"D:\left.png", left_eye)
+            cv2.imwrite(r"D:\image.png", img)
 
         # normalization
         face = image_normalization(face)
         left_eye = image_normalization(left_eye)
         right_eye = image_normalization(right_eye)
+
+        # preprocessing for VGG16
+        face = preprocess_input(face)
+        left_eye = preprocess_input(left_eye)
+        right_eye = preprocess_input(right_eye)
 
         ######################################################
 
