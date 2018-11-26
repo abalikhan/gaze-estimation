@@ -2,7 +2,7 @@ import os
 from keras.optimizers import SGD, Adam
 from keras.callbacks import  EarlyStopping, ModelCheckpoint, History, ReduceLROnPlateau
 from load_data import load_data_from_npz, load_batch, load_data_names, load_batch_from_names_random
-from Keras_VGG16 import get_eye_tracker_model
+from models import get_eye_tracker_model
 import tensorflow as tf
 from keras.utils.training_utils import multi_gpu_model
 from keras.models import save_model, load_model
