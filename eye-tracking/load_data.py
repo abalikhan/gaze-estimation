@@ -355,9 +355,9 @@ def load_batch_from_names_random(names, path, batch_size, img_cols, img_rows, im
         right_eye = image_normalization(right_eye)
 
         # preprocessing for VGG16
-#         face = preprocess_input(face)
-#         left_eye = preprocess_input(left_eye)
-#         right_eye = preprocess_input(right_eye)
+        face = preprocess_input(face)
+        left_eye = preprocess_input(left_eye)
+        right_eye = preprocess_input(right_eye)
 
         ######################################################
 

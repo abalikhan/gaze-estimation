@@ -46,7 +46,7 @@ def get_eye_model(img_cols, img_rows, img_ch):
 # face model
 def get_face_model(img_cols, img_rows, img_ch):
 
-    face_img_input = Input(shape=(img_cols, img_rows,img_ch))
+    face_img_input = Input(shape=(img_cols, img_rows, img_ch))
 
     h = Conv2D(96, (11, 11), activation=activation)(face_img_input)
     h = MaxPool2D(pool_size=(2, 2))(h)
@@ -62,7 +62,7 @@ def get_face_model(img_cols, img_rows, img_ch):
 
 
 # final model
-def get_eye_tracker_model(img_ch, img_cols, img_rows):
+def get_eye_tracker_model(img_cols, img_rows, img_ch):
 
     # get partial models
     eye_net = get_eye_model(img_cols, img_rows,img_ch)

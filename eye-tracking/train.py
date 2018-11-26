@@ -43,11 +43,13 @@ def train(args):
     #todo: manage parameters in main
     if args.data == "big":
         dataset_path = r'../data'  #../data
-
+        # dataset_path = r'D:\gazecapture_small'
     if args.data == "big":
         train_path = '../dataset/train'
         val_path = '../dataset/validation'
         # test_path = r"C:\Users\Aliab\PycharmProjects\data_small\test"
+        # train_path = r"C:\Users\Aliab\PycharmProjects\data_small\train"
+        # val_path = r"C:\Users\Aliab\PycharmProjects\data_small\validation"
 
     print("{} dataset: {}".format(args.data, dataset_path))
     # train parameters
