@@ -19,9 +19,6 @@ def get_eye_model(img_cols, img_rows, img_ch):
     h = Conv2D(384, (3, 3), activation=activation)(h)
     h = BatchNormalization()(h)
     h = MaxPool2D(pool_size=(2, 2))(h)
-    h = Conv2D(384, (3, 3), activation=activation)(h)
-    h = BatchNormalization()(h)
-    h = MaxPool2D(pool_size=(2, 2))(h)
     h = Conv2D(64, (3, 3), activation=activation)(h)
     out = BatchNormalization()(h)
 
@@ -119,23 +116,19 @@ def get_eye_tracker_model(img_cols, img_rows, img_ch):
     fc_f1 = BatchNormalization()(fc_f1)
     fc_f2 = Dense(128, activation=activation)(fc_f1)
     fc_f2 = BatchNormalization()(fc_f2)
-    # fc_f3 = Dense(64, activation=activation)(fc_f2)
-    # fc_f3 = BatchNormalization()(fc_f3)
+    fc_f3 = Dense(64, activation=activation)(fc_f2)
+    fc_f3 = BatchNormalization()(fc_f3)
 
     # dense layers for face grid
     fg = Flatten()(face_grid)
     fc_fg1 = Dense(256, activation=activation)(fg)
     fc_fg1 = BatchNormalization()(fc_fg1)
-    # fc_fg2 = Dense(128, activation=activation)(fc_fg1)
-    # fc_fg2 = BatchNormalization()(fc_fg2)
+    fc_fg2 = Dense(128, activation=activation)(fc_fg1)
+    fc_fg2 = BatchNormalization()(fc_fg2)
 
-    # putting Face and face grid in a single layer
-    fcfg = concatenate([fc_f2, fc_fg1])
-    fcfg1 = Dense(128, activation=activation)(fcfg)
-    fcfg1 = BatchNormalization()(fcfg1)
 
     # final dense layers
-    h = concatenate([fc_e1, fcfg1])
+    h = concatenate([fc_e1, fc_f3, fc_fg2])
     fc1 = Dense(128, activation=activation)(h)
     fc1 = BatchNormalization()(fc1)
     fc1 = Dropout(0.3)(fc1)
