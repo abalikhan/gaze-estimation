@@ -9,10 +9,10 @@ if __name__ == '__main__':
     parser.add_argument('-test', action='store_true', help='train flag')
     parser.add_argument('-data', type=str, default='big', help='which dataset, small or big')
     parser.add_argument('-max_epoch', '--max_epoch', type=int, default=100, help='max number of iterations (default 100)')
-    parser.add_argument('-batch_size', type=int, default=160, help='batch size (default 50)')
+    parser.add_argument('-batch_size', type=int, default=128, help='batch size (default 50)')
     parser.add_argument('-patience', type=int, default=10, help='early stopping patience (default 10)')
     parser.add_argument('-dev', type=str, default="0", help='what cpu or gpu (recommended) use to train the model')
-    parser.add_argument("-gpus", "--gpus", type=int, default=1, help="# of GPUs to use for training")
+    # parser.add_argument("-gpus", "--gpus", type=int, default=4, help="# of GPUs to use for training")
     args = parser.parse_args()
     # train
     if args.train:

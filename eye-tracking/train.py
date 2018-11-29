@@ -1,8 +1,8 @@
 import os
 from keras.optimizers import SGD, Adam
-from keras.callbacks import  EarlyStopping, ModelCheckpoint, History, ReduceLROnPlateau
+from keras.callbacks import EarlyStopping, ModelCheckpoint, History, ReduceLROnPlateau
 from load_data import load_data_from_npz, load_batch, load_data_names, load_batch_from_names_random
-from models import get_eye_tracker_model
+from my_model import get_eye_tracker_model
 import tensorflow as tf
 from keras.utils.training_utils import multi_gpu_model
 from keras.models import save_model, load_model
@@ -36,20 +36,20 @@ def generator_val_data(names, path, batch_size, img_cols, img_rows, img_ch):
 def train(args):
 
     #getting gpu parameters
-    G = args.gpus
+    # G = args.gpus
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = args.dev
 
     #todo: manage parameters in main
     if args.data == "big":
-        dataset_path = r'../data'  #../data
-        # dataset_path = r'D:\gazecapture_small'
+        dataset_path = '../data'  #../data
+        # dataset_path = r'D:\GazeCapture'
     if args.data == "big":
         train_path = '../dataset/train'
         val_path = '../dataset/validation'
         # test_path = r"C:\Users\Aliab\PycharmProjects\data_small\test"
-        # train_path = r"C:\Users\Aliab\PycharmProjects\data_small\train"
-        # val_path = r"C:\Users\Aliab\PycharmProjects\data_small\validation"
+        # train_path = r"C:\Users\Aliab\PycharmProjects\data\train"
+        # val_path = r"C:\Users\Aliab\PycharmProjects\data\validation"
 
     print("{} dataset: {}".format(args.data, dataset_path))
     # train parameters
@@ -58,8 +58,8 @@ def train(args):
     patience = args.patience
 
     # image parameter
-    img_cols = 224
-    img_rows = 224
+    img_cols = 144
+    img_rows = 144
     img_ch = 3
 
     # using multiGPU for training
@@ -76,9 +76,9 @@ def train(args):
     # print("Done.")
 
     # optimizer
-    lr = 1e-3
-    sgd = SGD(lr=1e-2, decay=1e-4, momentum=9e-1, nesterov=True)
-    adam = Adam(lr, decay=1e-4)
+    # lr = 1e-3
+    sgd = SGD(lr=1e-3, decay=1e-4, momentum=9e-1, nesterov=True)
+    adam = Adam(1e-3, decay=1e-5, amsgrad=True)
 
     # Loading Previous model check
     model_file = "model.hdf5"
