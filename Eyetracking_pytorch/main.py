@@ -42,6 +42,13 @@ Booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}
 doLoad = True # Load checkpoint at the beginning
 doTest = False # Only run test, no training
 
+# GPU available
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = '1, 2, 3, 4'
+print('__Number CUDA Devices:', torch.cuda.device_count())
+print('Active CUDA Device: GPU', torch.cuda.current_device())
+
+
 workers = 8
 epochs = 100
 batch_size = torch.cuda.device_count()*100 # Change if out of cuda memory
@@ -56,10 +63,6 @@ lr = base_lr
 
 count_test = 0
 count = 0
-
-# GPU available
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = 4
 
 
 def main():
