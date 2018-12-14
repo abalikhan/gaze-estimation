@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 
-from EyeTrackingData import ITrackerData
+from EyeTrackerData import ITrackerData
 from EyeTrackerModel import ITrackerModel
 
 '''
@@ -42,16 +42,14 @@ Booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}
 doLoad = True # Load checkpoint at the beginning
 doTest = False # Only run test, no training
 
-# GPU available
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = '1, 2, 3, 4'
-print('__Number CUDA Devices:', torch.cuda.device_count())
-print('Active CUDA Device: GPU', torch.cuda.current_device())
-
-
 workers = 8
 epochs = 100
-batch_size = torch.cuda.device_count()*100 # Change if out of cuda memory
+# # GPU available
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"] = '0,1,3,4'
+# print('__Number CUDA Devices:', torch.cuda.device_count())
+# print('Active CUDA Device: GPU', torch.cuda.current_device())
+# batch_size = torch.cuda.device_count()*100 # Change if out of cuda memory
 # batch_size = 16
 base_lr = 0.0001
 momentum = 0.9
@@ -64,12 +62,26 @@ lr = base_lr
 count_test = 0
 count = 0
 
+# # GPU available
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"] = '0,1,3,4'
+
 
 def main():
+
+    # GPU available
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0, 1, 2, 3'
+    print('__Number CUDA Devices:', torch.cuda.device_count())
+    print('Active CUDA Device: GPU', torch.cuda.current_device())
+
+    #batch size
+    batch_size = torch.cuda.device_count() * 100  # Change if out of cuda memory
+
     global args, best_prec1, weight_decay, momentum
 
     model = ITrackerModel()
-    model = torch.nn.DataParallel(model)
+    model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3])
     model.cuda()
     imSize=(224,224)
     cudnn.benchmark = True   
