@@ -58,7 +58,7 @@ class ItrackerImageModel(nn.Module):
             nn.ELU(inplace=True),
             nn.BatchNorm2d(num_features=384),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(384, 64, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(384, 64, kernel_size=3, stride=1, padding=2),
             nn.ELU(inplace=True),
             nn.BatchNorm2d(num_features=64)
 
@@ -167,13 +167,13 @@ class ITrackerModel(nn.Module):
         self.gridModel = FaceGridModel()
         # Joining both eyes
         self.eyesFC = nn.Sequential(
-            nn.Linear(2 * 7 * 7 * 64, 128),
-            nn.ReLU(inplace=True),
+            nn.Linear(2 * 8 * 8 * 64, 128),
+            nn.ELU(inplace=True),
         )
         # Joining everything
         self.fc = nn.Sequential(
             nn.Linear(128 + 64 + 128, 128),
-            nn.ReLU(inplace=True),
+            nn.ELU(inplace=True),
             nn.Linear(128, 2),
         )
 

@@ -40,7 +40,7 @@ Booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}
 
 # Change there flags to control what happens.
 doLoad = True # Load checkpoint at the beginning
-doTest = False # Only run test, no training
+doTest = True # Only run test, no training
 
 workers = 8
 epochs = 100
@@ -229,9 +229,8 @@ def validate(val_loader, model, criterion, epoch):
             imEyeR = torch.autograd.Variable(imEyeR)
             faceGrid = torch.autograd.Variable(faceGrid)
             gaze = torch.autograd.Variable(gaze)
-
-        # compute output
-        output = model(imFace, imEyeL, imEyeR, faceGrid)
+            # compute output
+            output = model(imFace, imEyeL, imEyeR, faceGrid)
 
         loss = criterion(output, gaze)
         
@@ -258,7 +257,7 @@ def validate(val_loader, model, criterion, epoch):
 
     return lossesLin.avg
 
-CHECKPOINTS_PATH = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
+CHECKPOINTS_PATH = '../Eyetracking_pytorch' #r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
 
 def load_checkpoint(filename='checkpoint.pth.tar'):
     filename = os.path.join(CHECKPOINTS_PATH, filename)

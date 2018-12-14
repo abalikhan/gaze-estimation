@@ -12,8 +12,8 @@ import json
 import deepdish as dd
 
 
-DATASET_PATH = '../data'
-meta_file = '../Eyetracking_pytorch/meta_file.h5'
+DATASET_PATH = '../data' #r'D:\gazecapture_small'
+meta_file = '../Eyetracking_pytorch/meta_file.h5' #r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\meta_small.h5'
 
 # normalize a single image
 def image_normalization(img):
