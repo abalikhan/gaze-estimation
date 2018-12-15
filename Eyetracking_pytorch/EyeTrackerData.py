@@ -1,5 +1,5 @@
 import torch.utils.data as data
-# import scipy.io as sio
+import scipy.io as sio
 from PIL import Image
 from os.path import join
 # import os.path
@@ -13,8 +13,9 @@ import deepdish as dd
 import matplotlib.pyplot as plt
 
 
-DATASET_PATH = r'D:\gazecapture_small' #'../data'
-meta_file = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\meta_small.h5' #'../Eyetracking_pytorch/meta_file.h5' #
+DATASET_PATH = '../data' #r'D:\gazecapture_small' #
+meta_file = '../Eyetracking_pytorch/meta_file.h5' #r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\meta_small.h5'
+MEAN_PATH = '../Eyetracking_pytorch' #r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
 
 # normalize a single image
 def image_normalization(img):
@@ -23,6 +24,22 @@ def image_normalization(img):
     img = img - np.mean(img)
 
     return img
+class SubtractMean(object):
+    """Normalize a tensor image with mean.
+    """
+
+    def __init__(self, meanImg):
+        self.meanImg = transforms.ToTensor()(meanImg)
+
+    def __call__(self, tensor):
+        """
+        Args:
+            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+        Returns:
+            Tensor: Normalized image.
+        """
+        return tensor.sub(self.meanImg)
+
 # load h5 file containing all information required
 def loadData(filename, silent = False):
     try:
@@ -40,24 +57,27 @@ class ITrackerData(data.Dataset):
         self.imSize = imSize
         self.gridSize = gridSize
 
-        #     # applying transformation
-        # self.transformFace = transforms.Compose([
-        #     transforms.Resize(self.imSize),
-        #     transforms.ToTensor()
-        #     ])
-        #
-        # self.transformEyeL= transforms.Compose([
-        #     transforms.Resize(self.imSize),
-        #     transforms.ToTensor()
-        # ])
-        # self.transformEyeR = transforms.Compose([
-        #     transforms.Resize(self.imSize),
-        #     transforms.ToTensor()
-        # ])
-
         # loading dataset
         print ('loading dataset.... ')
         self.data = dd.io.load (meta_file)
+        self.faceMean = sio.loadmat(join(MEAN_PATH, 'mean_face_224.mat'), squeeze_me=True, struct_as_record=False)['image_mean']
+        self.eyeLeftMean = sio.loadmat(join(MEAN_PATH, 'mean_left_224.mat'), squeeze_me=True, struct_as_record=False)['image_mean']
+        self.eyeRightMean = sio.loadmat(join(MEAN_PATH, 'mean_right_224.mat'), squeeze_me=True, struct_as_record=False)['image_mean']
+
+        #     # applying transformation
+        self.transformFace = transforms.Compose([
+            transforms.ToTensor(),
+            SubtractMean(meanImg=self.faceMean)
+        ])
+
+        self.transformEyeL = transforms.Compose([
+            transforms.ToTensor(),
+            SubtractMean(meanImg=self.eyeLeftMean)
+        ])
+        self.transformEyeR = transforms.Compose([
+            transforms.ToTensor(),
+            SubtractMean(meanImg=self.eyeRightMean),
+        ])
 
         self.split = split
         if split == 'train':
@@ -165,10 +185,10 @@ class ITrackerData(data.Dataset):
         right_eye = img[tl_y:br_y, tl_x:br_x]
         # cv2.imwrite(r'D:\righteyefile.jpg', right_eye)
 
-        # normalize the images
-        face = image_normalization(face)
-        left_eye = image_normalization(left_eye)
-        right_eye = image_normalization(right_eye)
+        # # normalize the images
+        # face = image_normalization(face)
+        # left_eye = image_normalization(left_eye)
+        # right_eye = image_normalization(right_eye)
 
         # plt.imshow(face)
         # plt.show(True)
@@ -185,16 +205,21 @@ class ITrackerData(data.Dataset):
         right_eye = cv2.resize(right_eye, self.imSize)
         #
         # taking transpose
-        face = face.transpose(2, 0, 1)
-        left_eye = left_eye.transpose(2, 0, 1)
-        right_eye = right_eye.transpose(2, 0, 1)
+
+        imFace = self.transformFace(face)
+        imEyeL = self.transformEyeL(left_eye)
+        imEyeR = self.transformEyeR(right_eye)
         # plt.imshow(face)
         # plt.show(True)
-
         # now convert to tensors
-        imFace = torch.FloatTensor(face)
-        imEyeL = torch.FloatTensor(left_eye)
-        imEyeR = torch.FloatTensor(right_eye)
+        # imFace = torch.FloatTensor(face)
+        # imEyeL = torch.FloatTensor(left_eye)
+        # imEyeR = torch.FloatTensor(right_eye)
+        #
+        # # subracting the mean from each image
+        # imFace = SubtractMean(imFace, meanImg=self.faceMean)
+        # imEyeL = SubtractMean(imEyeL, meanImg=self.eyeLeftMean)
+        # imEyeR = SubtractMean(imEyeR, meanImg=self.eyeRightMean)
         # plt.imshow(face)
         # plt.show(True)
 
