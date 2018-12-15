@@ -10,10 +10,11 @@ import numpy as np
 import cv2
 import json
 import deepdish as dd
+import matplotlib.pyplot as plt
 
 
-DATASET_PATH = '../data' #r'D:\gazecapture_small'
-meta_file = '../Eyetracking_pytorch/meta_file.h5' #r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\meta_small.h5'
+DATASET_PATH = r'D:\gazecapture_small' #'../data'
+meta_file = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\meta_small.h5' #'../Eyetracking_pytorch/meta_file.h5' #
 
 # normalize a single image
 def image_normalization(img):
@@ -39,23 +40,25 @@ class ITrackerData(data.Dataset):
         self.imSize = imSize
         self.gridSize = gridSize
 
+        #     # applying transformation
+        # self.transformFace = transforms.Compose([
+        #     transforms.Resize(self.imSize),
+        #     transforms.ToTensor()
+        #     ])
+        #
+        # self.transformEyeL= transforms.Compose([
+        #     transforms.Resize(self.imSize),
+        #     transforms.ToTensor()
+        # ])
+        # self.transformEyeR = transforms.Compose([
+        #     transforms.Resize(self.imSize),
+        #     transforms.ToTensor()
+        # ])
+
         # loading dataset
         print ('loading dataset.... ')
         self.data = dd.io.load (meta_file)
 
-        # applying transformation
-        self.transformFace = transforms.Compose([
-            transforms.Resize(self.imSize),
-            transforms.ToTensor()
-        ])
-        self.transformEyeL = transforms.Compose([
-            transforms.Resize(self.imSize),
-            transforms.ToTensor()
-        ])
-        self.transformEyeR = transforms.Compose([
-            transforms.Resize(self.imSize),
-            transforms.ToTensor()
-        ])
         self.split = split
         if split == 'train':
             mask = self.data['maskTr']
@@ -75,6 +78,27 @@ class ITrackerData(data.Dataset):
             #im = Image.new("RGB", self.imSize, "white")
 
         return im
+    # def trans(self, data, stage):
+    #     # applying transformation
+    #     self.data = data
+    #     if stage == 0:
+    #         self.data = transforms.Compose([
+    #             transforms.Resize(self.imSize),
+    #             transforms.ToTensor()
+    #         ])
+    #         return self.data
+    #     elif stage == 1:
+    #        self.data = transforms.Compose([
+    #             transforms.Resize(self.imSize),
+    #             transforms.ToTensor()
+    #         ])
+    #        return self.data
+    #     else:
+    #         self.data = transforms.Compose([
+    #             transforms.Resize(self.imSize),
+    #             transforms.ToTensor()
+    #         ])
+    #         return self.data
 
     def makeGrid(self, params):
         gridLen = self.gridSize[0] * self.gridSize[1]
@@ -146,16 +170,52 @@ class ITrackerData(data.Dataset):
         left_eye = image_normalization(left_eye)
         right_eye = image_normalization(right_eye)
 
-        # conversion from ndarry to PIL image
-        face = Image.fromarray(np.uint8(face))
-        left_eye = Image.fromarray(np.uint8(left_eye))
-        right_eye = Image.fromarray(np.uint8(right_eye))
+        # plt.imshow(face)
+        # plt.show(True)
 
+        # resizing the array
+
+        # face = np.resize(face, new_shape=(self.imSize, 3))
+        # left_eye = np.resize(left_eye, new_shape=(self.imSize, 3))
+        # right_eye = np.resize(right_eye, new_shape=(self.imSize, 3))
+
+        # resize images
+        face = cv2.resize(face, self.imSize)
+        left_eye = cv2.resize(left_eye, self.imSize)
+        right_eye = cv2.resize(right_eye, self.imSize)
+        #
+        # taking transpose
+        face = face.transpose(2, 0, 1)
+        left_eye = left_eye.transpose(2, 0, 1)
+        right_eye = right_eye.transpose(2, 0, 1)
+        # plt.imshow(face)
+        # plt.show(True)
+
+        # now convert to tensors
+        imFace = torch.FloatTensor(face)
+        imEyeL = torch.FloatTensor(left_eye)
+        imEyeR = torch.FloatTensor(right_eye)
+        # plt.imshow(face)
+        # plt.show(True)
+
+        #
+        # imFace = torch.from_numpy(np.squeeze(face))
+        # imEyeL = torch.from_numpy(np.squeeze(left_eye))
+        # imEyeR = torch.from_numpy(np.squeeze(right_eye))
+
+        # # conversion from ndarry to PIL image
+        # face = Image.fromarray(np.uint8(face))
+        # left_eye = Image.fromarray(np.uint8(left_eye))
+        # right_eye = Image.fromarray(np.uint8(right_eye))
+        # plt.isinteractive()
         # transformation applied on face, left and right eyes images
-        imFace = self.transformFace(face)
-        imEyeL = self.transformEyeL(left_eye)
-        imEyeR = self.transformEyeR(right_eye)
+        # imFace = self.transformFace(face)
+        # imEyeL = self.transformEyeL(left_eye)
+        # imEyeR = self.transformEyeR(right_eye)
+        # plt.isinteractive()
+        # plt.imshow(imFace)
 
+        # plt.show(block=True)
         # open facegrid and gaze labels
         dot_file = open(join(DATASET_PATH + r'/' + recNum + r'/dotInfo.json'))
         fg_file = open(join(DATASET_PATH + r'/' + recNum + r'/faceGrid.json'))
@@ -183,10 +243,12 @@ class ITrackerData(data.Dataset):
         row = torch.LongTensor([int(index)])
         faceGrid = torch.FloatTensor(faceGrid)
         gaze = torch.FloatTensor(gaze)
+
         return row, imFace, imEyeL, imEyeR, faceGrid, gaze
 
     def __len__(self):
         return len(self.indices)
+
 
 if __name__ == '__main__':
     pass
