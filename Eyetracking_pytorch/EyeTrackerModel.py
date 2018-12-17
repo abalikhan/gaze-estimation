@@ -82,6 +82,7 @@ class FaceImageModel(nn.Module):
             nn.ELU(inplace=True),
             nn.BatchNorm2d(num_features=64),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
+            nn.Dropout(0.2),
 
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
@@ -90,6 +91,7 @@ class FaceImageModel(nn.Module):
             nn.ELU(inplace=True),
             nn.BatchNorm2d(num_features=128),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
+            nn.Dropout(0.2),
 
             nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
@@ -191,6 +193,7 @@ class ITrackerModel(nn.Module):
 
         # Cat all
         x = torch.cat((xEyes, xFace, xGrid), 1)
+        x = nn.Dropout(0.3)(x)
         x = self.fc(x)
 
         return x
