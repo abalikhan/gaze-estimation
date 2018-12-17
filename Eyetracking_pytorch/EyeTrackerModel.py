@@ -46,21 +46,21 @@ class ItrackerImageModel(nn.Module):
         self.features = nn.Sequential(
             nn.Conv2d(3, 96, kernel_size=3, stride=4, padding=0),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=96, affine=False),
+            nn.BatchNorm2d(num_features=96),
             nn.MaxPool2d(kernel_size=2, stride=2),
             # nn.CrossMapLRN2d(size=5, alpha=0.0001, beta=0.75, k=1.0),
             nn.Conv2d(96, 256, kernel_size=3, stride=1, padding=2, groups=2),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=256, affine=False),
+            nn.BatchNorm2d(num_features=256),
             nn.MaxPool2d(kernel_size=2, stride=2),
             # nn.CrossMapLRN2d(size=5, alpha=0.0001, beta=0.75, k=1.0),
             nn.Conv2d(256, 384, kernel_size=3, stride=1, padding=0),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=384, affine=False),
+            nn.BatchNorm2d(num_features=384),
             nn.MaxPool2d(kernel_size=1, stride=3),
             nn.Conv2d(384, 64, kernel_size=3, stride=1, padding=2),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=64, affine=False)
+            nn.BatchNorm2d(num_features=64)
 
         )
 
@@ -77,55 +77,55 @@ class FaceImageModel(nn.Module):
         self.face_features = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=64, affine=False),
+            nn.BatchNorm2d(num_features=64),
             nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=64, affine=False),
+            nn.BatchNorm2d(num_features=64),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
             nn.Dropout2d(0.2),
 
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=128, affine=False),
+            nn.BatchNorm2d(num_features=128),
             nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=128, affine=False),
+            nn.BatchNorm2d(num_features=128),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
             nn.Dropout2d(0.2),
 
             nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=256, affine=False),
+            nn.BatchNorm2d(num_features=256),
             nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=256, affine=False),
+            nn.BatchNorm2d(num_features=256),
             nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=256, affine=False),
+            nn.BatchNorm2d(num_features=256),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
             nn.Dropout2d(0.2),
 
             nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=512, affine=False),
+            nn.BatchNorm2d(num_features=512),
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=512, affine=False),
+            nn.BatchNorm2d(num_features=512),
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=512, affine=False),
+            nn.BatchNorm2d(num_features=512),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
             nn.Dropout2d(0.2),
 
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=512, affine=False),
+            nn.BatchNorm2d(num_features=512),
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=512, affine=False),
+            nn.BatchNorm2d(num_features=512),
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.BatchNorm2d(num_features=512, affine=False),
+            nn.BatchNorm2d(num_features=512),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
             nn.Dropout2d(0.2)
 
@@ -133,11 +133,13 @@ class FaceImageModel(nn.Module):
         self.fc = nn.Sequential(
             nn.Linear(7*7*512, 256),
             nn.ELU(inplace=True),
-            nn.BatchNorm1d(num_features=256, affine=False),
+            nn.BatchNorm1d(num_features=256),
             nn.Linear(256, 128),
             nn.ELU(inplace=True),
-            nn.Dropout(0.3),
-            nn.BatchNorm1d(num_features=128, affine=False)
+            # nn.Dropout(0.3),
+            nn.BatchNorm1d(num_features=128),
+            nn.Linear(128, 64),
+            nn.ELU(inplace=True),
         )
 
     def forward(self, x):
@@ -154,10 +156,10 @@ class FaceGridModel(nn.Module):
         self.fc = nn.Sequential(
             nn.Linear(gridSize * gridSize, 256),
             nn.ELU(inplace=True),
-            nn.BatchNorm1d(num_features=256, affine=False),
+            nn.BatchNorm1d(num_features=256),
             nn.Linear(256, 128),
             nn.ELU(inplace=True),
-            nn.BatchNorm1d(num_features=128, affine=False)
+            # nn.BatchNorm1d(num_features=128, affine=False)
         )
 
     def forward(self, x):
@@ -175,17 +177,15 @@ class ITrackerModel(nn.Module):
         self.gridModel = FaceGridModel()
         # Joining both eyes
         self.eyesFC = nn.Sequential(
-            nn.Linear(2 * 7 * 7 * 64, 256),
+            nn.Linear(2 * 7 * 7 * 64, 128),
             nn.ELU(inplace=True),
-            nn.BatchNorm1d(num_features=256, affine=False),
-            nn.Linear(256, 128),
-            nn.ELU(inplace=True),
+            nn.BatchNorm1d(num_features=128)
             # nn.Dropout(0.2),
-            nn.BatchNorm1d(num_features=128, affine=False)
+            # nn.BatchNorm1d(num_features=128, affine=False)
         )
         # Joining everything
         self.fc = nn.Sequential(
-            nn.Linear(128 + 128 + 128, 128),
+            nn.Linear(128 + 64 + 128, 128),
             nn.ELU(inplace=True),
             nn.Dropout(0.4),
             nn.Linear(128, 2),
