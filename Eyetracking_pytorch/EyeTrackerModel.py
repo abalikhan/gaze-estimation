@@ -128,18 +128,12 @@ class FaceImageModel(nn.Module):
 
         )
         self.fc = nn.Sequential(
-            nn.Linear(7*7*512, 4096),
+            nn.Linear(7*7*512, 128),
             nn.ReLU(inplace=True),
-            nn.BatchNorm2d(num_features=4096),
-            nn.Linear(4096, 1024),
+            nn.BatchNorm1d(num_features=128),
+            nn.Linear(128, 64),
             nn.ReLU(inplace=True),
-            nn.BatchNorm2d(num_features=1024),
-            nn.Linear(1024, 256),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm2d(num_features=256),
-            nn.Linear(256, 128),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm2d(num_features=128)
+            nn.BatchNorm1d(num_features=64)
         )
 
     def forward(self, x):
@@ -154,12 +148,12 @@ class FaceGridModel(nn.Module):
     def __init__(self, gridSize=25):
         super(FaceGridModel, self).__init__()
         self.fc = nn.Sequential(
-            nn.Linear(gridSize * gridSize, 1024),
+            nn.Linear(gridSize * gridSize, 256),
             nn.ReLU(inplace=True),
-            nn.BatchNorm2d(num_features=1024),
-            nn.Linear(1024, 256),
+            nn.BatchNorm1d(num_features=256),
+            nn.Linear(256, 128),
             nn.ReLU(inplace=True),
-            nn.BatchNorm2d(num_features=256)
+            nn.BatchNorm1d(num_features=128)
         )
 
     def forward(self, x):
@@ -177,22 +171,20 @@ class ITrackerModel(nn.Module):
         self.gridModel = FaceGridModel()
         # Joining both eyes
         self.eyesFC = nn.Sequential(
-            nn.Linear(2 * 7 * 7 * 64, 4096),
+            nn.Linear(2 * 7 * 7 * 64, 256),
             nn.ReLU(inplace=True),
-            nn.BatchNorm2d(num_features=4096),
-            nn.Linear(4096, 1024),
+            nn.BatchNorm1d(num_features=256),
+            nn.Linear(256, 128),
             nn.ReLU(inplace=True),
-            nn.BatchNorm2d(num_features=1024),
-            nn.Linear(1024, 128),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm2d(num_features=128),
+            nn.Dropout(0.2),
+            nn.BatchNorm1d(num_features=128)
         )
         # Joining everything
         self.fc = nn.Sequential(
-            nn.Linear(128 + 128 + 256, 128),
+            nn.Linear(128 + 64 + 128, 128),
             nn.ReLU(inplace=True),
             nn.Linear(128, 2),
-            nn.BatchNorm2d(num_features=2)
+            nn.BatchNorm1d(num_features=2)
         )
 
     def forward(self, faces, eyesLeft, eyesRight, faceGrids):
@@ -201,7 +193,6 @@ class ITrackerModel(nn.Module):
         xEyeR = self.eyeModel(eyesRight)
         # Cat and FC
         xEyes = torch.cat((xEyeL, xEyeR), 1)
-        xEyes = nn.Dropout(0.2)(xEyes)
         xEyes = self.eyesFC(xEyes)
 
         # Face net
