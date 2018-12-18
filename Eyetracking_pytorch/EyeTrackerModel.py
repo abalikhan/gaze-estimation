@@ -45,21 +45,21 @@ class ItrackerImageModel(nn.Module):
         super(ItrackerImageModel, self).__init__()
         self.features = nn.Sequential(
             nn.Conv2d(3, 96, kernel_size=3, stride=4, padding=0),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=96),
             nn.MaxPool2d(kernel_size=2, stride=2),
             # nn.CrossMapLRN2d(size=5, alpha=0.0001, beta=0.75, k=1.0),
             nn.Conv2d(96, 256, kernel_size=3, stride=1, padding=2, groups=2),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=256),
             nn.MaxPool2d(kernel_size=2, stride=2),
             # nn.CrossMapLRN2d(size=5, alpha=0.0001, beta=0.75, k=1.0),
             nn.Conv2d(256, 384, kernel_size=3, stride=1, padding=0),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=384),
             nn.MaxPool2d(kernel_size=1, stride=3),
             nn.Conv2d(384, 64, kernel_size=3, stride=1, padding=2),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=64)
 
         )
@@ -76,55 +76,55 @@ class FaceImageModel(nn.Module):
         super(FaceImageModel, self).__init__()
         self.face_features = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=64),
             nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=64),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
             # nn.Dropout2d(0.2),
 
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=128),
             nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=128),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
             # nn.Dropout2d(0.2),
 
             nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=256),
             nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=256),
             nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=256),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
             # nn.Dropout2d(0.2),
 
             nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=512),
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=512),
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=512),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
             # nn.Dropout2d(0.2),
 
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=512),
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.BatchNorm2d(num_features=512),
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             # nn.Dropout2d(0.2),
             nn.BatchNorm2d(num_features=512),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1)
@@ -132,20 +132,18 @@ class FaceImageModel(nn.Module):
 
         )
         self.fc = nn.Sequential(
-            nn.Linear(7*7*512, 4096),
+            nn.Linear(7*7*512, 256),
             nn.Dropout(0.3),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             # nn.BatchNorm1d(num_features=256),
-            nn.Linear(4096, 1024),
+            nn.Linear(256, 128),
             nn.Dropout(0.2),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             # nn.Dropout(0.3),
             # nn.BatchNorm1d(num_features=128),
-            nn.Linear(1024, 256),
+            nn.Linear(128, 64),
             nn.Dropout(0.2),
-            nn.ELU(inplace=True),
-            nn.Linear(256, 64),
-            nn.ELU(inplace=True)
+            nn.LeakyReLU(inplace=True)
 
         )
 
@@ -163,10 +161,10 @@ class FaceGridModel(nn.Module):
         self.fc = nn.Sequential(
             nn.Linear(gridSize * gridSize, 256),
             # nn.Dropout(0.2),
-            nn.ELU(inplace=True),
+            nn.ReLU(inplace=True),
             # nn.BatchNorm1d(num_features=256),
             nn.Linear(256, 128),
-            nn.ELU(inplace=True),
+            nn.ReLU(inplace=True),
             # nn.BatchNorm1d(num_features=128, affine=False)
         )
 
@@ -187,7 +185,7 @@ class ITrackerModel(nn.Module):
         self.eyesFC = nn.Sequential(
             nn.Linear(2 * 7 * 7 * 64, 128),
             # nn.Dropout(0.2),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             # nn.BatchNorm1d(num_features=128)
             # nn.Dropout(0.2),
             # nn.BatchNorm1d(num_features=128, affine=False)
@@ -196,7 +194,7 @@ class ITrackerModel(nn.Module):
         self.fc = nn.Sequential(
             nn.Linear(128 + 64 + 128, 128),
             # nn.Dropout(0.3),
-            nn.ELU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.Linear(128, 2),
         )
 
