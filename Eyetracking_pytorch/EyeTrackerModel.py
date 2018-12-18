@@ -82,7 +82,7 @@ class FaceImageModel(nn.Module):
             nn.ELU(inplace=True),
             nn.BatchNorm2d(num_features=64),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
-            nn.Dropout2d(0.2),
+            # nn.Dropout2d(0.2),
 
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
@@ -91,7 +91,7 @@ class FaceImageModel(nn.Module):
             nn.ELU(inplace=True),
             nn.BatchNorm2d(num_features=128),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
-            nn.Dropout2d(0.2),
+            # nn.Dropout2d(0.2),
 
             nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
@@ -103,7 +103,7 @@ class FaceImageModel(nn.Module):
             nn.ELU(inplace=True),
             nn.BatchNorm2d(num_features=256),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
-            nn.Dropout2d(0.2),
+            # nn.Dropout2d(0.2),
 
             nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
@@ -115,7 +115,7 @@ class FaceImageModel(nn.Module):
             nn.ELU(inplace=True),
             nn.BatchNorm2d(num_features=512),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1),
-            nn.Dropout2d(0.2),
+            # nn.Dropout2d(0.2),
 
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
@@ -125,7 +125,7 @@ class FaceImageModel(nn.Module):
             nn.BatchNorm2d(num_features=512),
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
             nn.ELU(inplace=True),
-            nn.Dropout2d(0.2),
+            # nn.Dropout2d(0.2),
             nn.BatchNorm2d(num_features=512),
             nn.MaxPool2d(kernel_size=2, stride=2, dilation=1)
 
@@ -133,9 +133,11 @@ class FaceImageModel(nn.Module):
         )
         self.fc = nn.Sequential(
             nn.Linear(7*7*512, 256),
+            nn.Dropout(0.2),
             nn.ELU(inplace=True),
             # nn.BatchNorm1d(num_features=256),
             nn.Linear(256, 128),
+            nn.Dropout(0.2),
             nn.ELU(inplace=True),
             # nn.Dropout(0.3),
             # nn.BatchNorm1d(num_features=128),
@@ -156,6 +158,7 @@ class FaceGridModel(nn.Module):
         super(FaceGridModel, self).__init__()
         self.fc = nn.Sequential(
             nn.Linear(gridSize * gridSize, 256),
+            nn.Dropout(0.2),
             nn.ELU(inplace=True),
             # nn.BatchNorm1d(num_features=256),
             nn.Linear(256, 128),
@@ -179,6 +182,7 @@ class ITrackerModel(nn.Module):
         # Joining both eyes
         self.eyesFC = nn.Sequential(
             nn.Linear(2 * 7 * 7 * 64, 128),
+            nn.Dropout(0.2),
             nn.ELU(inplace=True),
             # nn.BatchNorm1d(num_features=128)
             # nn.Dropout(0.2),
@@ -187,8 +191,8 @@ class ITrackerModel(nn.Module):
         # Joining everything
         self.fc = nn.Sequential(
             nn.Linear(128 + 64 + 128, 128),
+            nn.Dropout(0.3),
             nn.ELU(inplace=True),
-            nn.Dropout(0.4),
             nn.Linear(128, 2),
         )
 
