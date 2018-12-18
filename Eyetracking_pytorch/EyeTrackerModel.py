@@ -132,17 +132,21 @@ class FaceImageModel(nn.Module):
 
         )
         self.fc = nn.Sequential(
-            nn.Linear(7*7*512, 256),
-            nn.Dropout(0.2),
+            nn.Linear(7*7*512, 4096),
+            nn.Dropout(0.3),
             nn.ELU(inplace=True),
             # nn.BatchNorm1d(num_features=256),
-            nn.Linear(256, 128),
+            nn.Linear(4096, 1024),
             nn.Dropout(0.2),
             nn.ELU(inplace=True),
             # nn.Dropout(0.3),
             # nn.BatchNorm1d(num_features=128),
-            nn.Linear(128, 64),
+            nn.Linear(1024, 256),
+            nn.Dropout(0.2),
             nn.ELU(inplace=True),
+            nn.Linear(256, 64),
+            nn.ELU(inplace=True)
+
         )
 
     def forward(self, x):
@@ -158,7 +162,7 @@ class FaceGridModel(nn.Module):
         super(FaceGridModel, self).__init__()
         self.fc = nn.Sequential(
             nn.Linear(gridSize * gridSize, 256),
-            nn.Dropout(0.2),
+            # nn.Dropout(0.2),
             nn.ELU(inplace=True),
             # nn.BatchNorm1d(num_features=256),
             nn.Linear(256, 128),
@@ -182,7 +186,7 @@ class ITrackerModel(nn.Module):
         # Joining both eyes
         self.eyesFC = nn.Sequential(
             nn.Linear(2 * 7 * 7 * 64, 128),
-            nn.Dropout(0.2),
+            # nn.Dropout(0.2),
             nn.ELU(inplace=True),
             # nn.BatchNorm1d(num_features=128)
             # nn.Dropout(0.2),
@@ -191,7 +195,7 @@ class ITrackerModel(nn.Module):
         # Joining everything
         self.fc = nn.Sequential(
             nn.Linear(128 + 64 + 128, 128),
-            nn.Dropout(0.3),
+            # nn.Dropout(0.3),
             nn.ELU(inplace=True),
             nn.Linear(128, 2),
         )
