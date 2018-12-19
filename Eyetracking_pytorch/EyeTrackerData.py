@@ -12,10 +12,14 @@ import json
 import deepdish as dd
 import matplotlib.pyplot as plt
 
-
-DATASET_PATH = '../data' #r'D:\gazecapture_small' #
-meta_file = '../Eyetracking_pytorch/meta_file.h5' #r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\meta_small.h5'
-MEAN_PATH = '../Eyetracking_pytorch' #r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
+#
+# DATASET_PATH = r'D:\gazecapture_small'
+# meta_file = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\meta_small.h5'
+# MEAN_PATH = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
+#
+DATASET_PATH = '../data'
+meta_file = '../Eyetracking_pytorch/meta_file.h5'
+MEAN_PATH = '../Eyetracking_pytorch'
 
 # normalize a single image
 def image_normalization(img):

@@ -11,9 +11,10 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
+from torchsummary import summary
 
-from EyeTrackerData import ITrackerData
-from EyeTrackerModel import ITrackerModel
+from Eyetracking_pytorch.EyeTrackerData import ITrackerData
+from Eyetracking_pytorch.EyeTrackerModel import ITrackerModel
 
 '''
 Train/test code for iTracker.
@@ -39,8 +40,8 @@ Booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}
 
 
 # Change there flags to control what happens.
-doLoad = True # Load checkpoint at the beginning
-doTest = True # Only run test, no training
+doLoad = False # Load checkpoint at the beginning
+doTest = False # Only run test, no training
 
 workers = 8
 epochs = 100
@@ -71,20 +72,20 @@ def main():
 
     # GPU available
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = '0, 1, 2, 3'
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0'
     print('__Number CUDA Devices:', torch.cuda.device_count())
     print('Active CUDA Device: GPU', torch.cuda.current_device())
 
     #batch size
-    batch_size = torch.cuda.device_count() * 100  # Change if out of cuda memory
+    batch_size = torch.cuda.device_count() * 24  # Change if out of cuda memory
 
     global args, best_prec1, weight_decay, momentum
 
     model = ITrackerModel()
-    model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3])
+    model = torch.nn.DataParallel(model, device_ids=[0])
     model.cuda()
-    imSize=(224,224)
-    cudnn.benchmark = True   
+    imSize=(224, 224)
+    cudnn.benchmark = True
 
     epoch = 0
     if doLoad:
@@ -102,8 +103,9 @@ def main():
             print('Warning: Could not read checkpoint!');
 
     
-    dataTrain = ITrackerData(split='train', imSize = imSize)
-    dataVal = ITrackerData(split='test', imSize = imSize)
+    dataTrain = ITrackerData(split='train', imSize=imSize)
+    dataVal = ITrackerData(split='val', imSize=imSize)
+    dataTest = ITrackerData(split='test', imSize=imSize)
    
     train_loader = torch.utils.data.DataLoader(
         dataTrain,
@@ -115,13 +117,25 @@ def main():
         batch_size=batch_size, shuffle=True,
         num_workers=workers, pin_memory=True)
 
+    test_loader = torch.utils.data.DataLoader(
+        dataTest,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=workers,
+        pin_memory=True
+    )
+
+
 
     criterion = nn.MSELoss().cuda()
 
-    optimizer = torch.optim.SGD(model.parameters(), lr,
-                                momentum=momentum,
-                                weight_decay=weight_decay)
+    # optimizer = torch.optim.SGD(model.parameters(), lr,
+    #                             momentum=momentum,
+    #                             weight_decay=weight_decay)
 
+    optimizer = torch.optim.Adam(model.parameters(), lr,
+                                 weight_decay=weight_decay)
+    summary(model, input_size=[(3, 224, 224), (3, 224, 224), (3, 224, 224), (1, 25, 25)])
     # Quick test
     if doTest:
         validate(val_loader, model, criterion, epoch)
@@ -137,7 +151,7 @@ def main():
         train(train_loader, model, criterion, optimizer, epoch)
 
         # evaluate on validation set
-        prec1 = validate(val_loader, model, criterion, epoch)
+        prec1 = validate(test_loader, model, criterion, epoch)
 
         # remember best prec@1 and save checkpoint
         is_best = prec1 < best_prec1
@@ -233,7 +247,7 @@ def validate(val_loader, model, criterion, epoch):
             output = model(imFace, imEyeL, imEyeR, faceGrid)
 
         loss = criterion(output, gaze)
-        
+
         lossLin = output - gaze
         lossLin = torch.mul(lossLin,lossLin)
         lossLin = torch.sum(lossLin,1)
@@ -241,7 +255,7 @@ def validate(val_loader, model, criterion, epoch):
 
         losses.update(loss.item(), imFace.size(0))
         lossesLin.update(lossLin.item(), imFace.size(0))
-     
+
         # compute gradient and do SGD step
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -257,9 +271,9 @@ def validate(val_loader, model, criterion, epoch):
 
     return lossesLin.avg
 
-CHECKPOINTS_PATH = '../Eyetracking_pytorch' #r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
+CHECKPOINTS_PATH = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'  #../Eyetracking_pytorch
 
-def load_checkpoint(filename='checkpoint.pth.tar'):
+def load_checkpoint(filename='best_checkpoint.pth.tar'):
     filename = os.path.join(CHECKPOINTS_PATH, filename)
     print(filename)
     if not os.path.isfile(filename):
@@ -297,7 +311,7 @@ class AverageMeter(object):
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    lr = base_lr * (0.1 ** (epoch // 30))
+    lr = base_lr * (0.3 ** (epoch // 5))
     for param_group in optimizer.state_dict()['param_groups']:
         param_group['lr'] = lr
 
