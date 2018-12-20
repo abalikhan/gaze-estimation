@@ -12,6 +12,8 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 from torchsummary import summary
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
 
 from Eyetracking_pytorch.EyeTrackerData import ITrackerData
 from Eyetracking_pytorch.EyeTrackerModel import ITrackerModel
@@ -40,10 +42,10 @@ Booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}
 
 
 # Change there flags to control what happens.
-doLoad = False # Load checkpoint at the beginning
+doLoad = True # Load checkpoint at the beginning
 doTest = False # Only run test, no training
 
-workers = 8
+workers = 20
 epochs = 100
 # # GPU available
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -72,17 +74,17 @@ def main():
 
     # GPU available
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0, 1, 2, 3'
     print('__Number CUDA Devices:', torch.cuda.device_count())
     print('Active CUDA Device: GPU', torch.cuda.current_device())
 
     #batch size
-    batch_size = torch.cuda.device_count() * 24  # Change if out of cuda memory
+    batch_size = torch.cuda.device_count() * 64  # Change if out of cuda memory
 
     global args, best_prec1, weight_decay, momentum
 
     model = ITrackerModel()
-    model = torch.nn.DataParallel(model, device_ids=[0])
+    model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3])
     model.cuda()
     imSize=(224, 224)
     cudnn.benchmark = True
@@ -129,30 +131,37 @@ def main():
 
     criterion = nn.MSELoss().cuda()
 
-    # optimizer = torch.optim.SGD(model.parameters(), lr,
-    #                             momentum=momentum,
-    #                             weight_decay=weight_decay)
-
-    optimizer = torch.optim.Adam(model.parameters(), lr,
+    optimizer = torch.optim.SGD(model.parameters(), lr,
+                                 momentum=momentum,
                                  weight_decay=weight_decay)
+
+    #optimizer = torch.optim.Adam(model.parameters(), lr,
+     #                            weight_decay=weight_decay)
+        
+    # lr reducing fxn
+    schedular = ReduceLROnPlateau(optimizer=optimizer, mode='min', factor=0.1, patience= 2, verbose=True, min_lr=0)
+        
     summary(model, input_size=[(3, 224, 224), (3, 224, 224), (3, 224, 224), (1, 25, 25)])
     # Quick test
     if doTest:
         validate(val_loader, model, criterion, epoch)
         return
 
-    for epoch in range(0, epoch):
-        adjust_learning_rate(optimizer, epoch)
+    #for epoch in range(0, epoch):
+     #   adjust_learning_rate(optimizer, epoch)
         
     for epoch in range(epoch, epochs):
-        adjust_learning_rate(optimizer, epoch)
+       # adjust_learning_rate(optimizer, epoch)
 
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch)
 
         # evaluate on validation set
         prec1 = validate(test_loader, model, criterion, epoch)
-
+        
+        #learning rate schedular
+        schedular.step(prec1)
+        
         # remember best prec@1 and save checkpoint
         is_best = prec1 < best_prec1
         best_prec1 = min(prec1, best_prec1)
