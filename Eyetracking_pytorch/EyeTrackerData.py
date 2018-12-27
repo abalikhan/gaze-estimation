@@ -13,13 +13,13 @@ import deepdish as dd
 import matplotlib.pyplot as plt
 
 #
-# DATASET_PATH = r'D:\gazecapture_small'
-# meta_file = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\meta_small.h5'
-# MEAN_PATH = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
+DATASET_PATH = r'D:\gazecapture'
+meta_file = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\Eyetracking_pytorch\meta_file.h5'
+MEAN_PATH = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
 #
-DATASET_PATH = '../data'
-meta_file = '../Eyetracking_pytorch/meta_file.h5'
-MEAN_PATH = '../Eyetracking_pytorch'
+# DATASET_PATH = '../data'
+# meta_file = '../Eyetracking_pytorch/meta_file.h5'
+# MEAN_PATH = '../Eyetracking_pytorch'
 
 # normalize a single image
 def image_normalization(img):
@@ -71,7 +71,9 @@ class ITrackerData(data.Dataset):
         #     # applying transformation
         self.transformFace = transforms.Compose([
             transforms.ToTensor(),
-            SubtractMean(meanImg=self.faceMean)
+            SubtractMean(meanImg=self.faceMean),
+            # transforms.Normalize(mean=[0.485, 0.456, 0.406],
+            #                      std=[0.229, 0.224, 0.225])
         ])
 
         self.transformEyeL = transforms.Compose([
@@ -124,18 +126,26 @@ class ITrackerData(data.Dataset):
     #         ])
     #         return self.data
 
-    def makeGrid(self, params):
-        gridLen = self.gridSize[0] * self.gridSize[1]
-        grid = np.zeros([gridLen, ], np.float32)
+    def Facegrid(self, xLo, yLo, w, h):
+        gridH = self.gridSize[0]
+        gridW = self.gridSize[1]
+        grid = np.zeros(shape=(gridH, gridW))
 
-        indsY = np.array([i // self.gridSize[0] for i in range(gridLen)])
-        indsX = np.array([i % self.gridSize[0] for i in range(gridLen)])
-        condX = np.logical_and(indsX >= params[0], indsX < params[0] + params[2])
-        condY = np.logical_and(indsY >= params[1], indsY < params[1] + params[3])
-        cond = np.logical_and(condX, condY)
+        xHi = xLo + w
+        yHi = yLo + h
 
-        grid[cond] = 1
-        return grid
+        # Clamp the values in the range.
+        xLo = int(min(gridW, max(0, xLo)))
+        xHi = int(min(gridW, max(0, xHi)))
+        yLo = int(min(gridH, max(0, yLo)))
+        yHi = int(min(gridH, max(0, yHi)))
+
+        faceLocation = np.ones((yHi - yLo, xHi - xLo))
+        grid[yLo:yHi, xLo:xHi] = faceLocation
+        grid = np.transpose(grid)
+        labelfg = grid.flatten()
+
+        return labelfg
     def __getitem__(self, index):
         index = self.indices[index]
 
@@ -263,10 +273,11 @@ class ITrackerData(data.Dataset):
         fg_Y = fg_json['Y'][idx]
         fg_H = fg_json['H'][idx]
         fg_W = fg_json['W'][idx]
-        param = [fg_X, fg_Y, fg_H, fg_W]
 
         # facegrid for face
-        faceGrid = self.makeGrid(param)
+        faceGrid = self.Facegrid(fg_X, fg_Y, fg_W, fg_H)
+        # faceGrid = self.makeGrid(param)
+
 
         # to tensor
         row = torch.LongTensor([int(index)])
@@ -278,12 +289,11 @@ class ITrackerData(data.Dataset):
     def __len__(self):
         return len(self.indices)
 
-
-if __name__ == '__main__':
-    pass
-
+#
+# if __name__ == '__main__':
+#     pass
     # batch_size = 50
-    # imSize = (64, 64)
+    # imSize = (224, 224)
     # workers = 2
     # dataTrain = ITrackerData(split='train', imSize = imSize)
     # train_loader = torch.utils.data.DataLoader(
