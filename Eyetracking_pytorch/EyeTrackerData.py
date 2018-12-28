@@ -1,31 +1,27 @@
 import torch.utils.data as data
 import scipy.io as sio
-from PIL import Image
 from os.path import join
-# import os.path
 import torchvision.transforms as transforms
 import torch
 import numpy as np
-# import re
 import cv2
 import json
 import deepdish as dd
 import matplotlib.pyplot as plt
 
 #
-DATASET_PATH = r'D:\gazecapture'
-meta_file = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\Eyetracking_pytorch\meta_file.h5'
-MEAN_PATH = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
-#
-# DATASET_PATH = '../data'
-# meta_file = '../Eyetracking_pytorch/meta_file.h5'
-# MEAN_PATH = '../Eyetracking_pytorch'
+# DATASET_PATH = r'D:\gazecapture'
+# meta_file = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\Eyetracking_pytorch\meta_file.h5'
+# MEAN_PATH = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
+
+DATASET_PATH = '../data'
+meta_file = '../Eyetracking_pytorch/meta_file.h5'
+MEAN_PATH = '../Eyetracking_pytorch'
 
 # normalize a single image
 def image_normalization(img):
 
-    img = img.astype('float32') / 255.
-    img = img - np.mean(img)
+    img = img.astype('float32')/ 255.0
 
     return img
 class SubtractMean(object):
@@ -33,7 +29,9 @@ class SubtractMean(object):
     """
 
     def __init__(self, meanImg):
-        self.meanImg = transforms.ToTensor()(meanImg)
+        self.meanImg = meanImg.astype('float32') / 255.0
+        self.meanImg = transforms.ToTensor()(self.meanImg)
+
 
     def __call__(self, tensor):
         """
@@ -47,7 +45,6 @@ class SubtractMean(object):
 # load h5 file containing all information required
 def loadData(filename, silent = False):
     try:
-        # http://stackoverflow.com/questions/6273634/access-array-contents-from-a-mat-file-loaded-using-scipy-io-loadmat-python
         if not silent:
             print('\tReading data from %s...' % filename)
         metadata = dd.io.load(filename)
@@ -72,8 +69,7 @@ class ITrackerData(data.Dataset):
         self.transformFace = transforms.Compose([
             transforms.ToTensor(),
             SubtractMean(meanImg=self.faceMean),
-            # transforms.Normalize(mean=[0.485, 0.456, 0.406],
-            #                      std=[0.229, 0.224, 0.225])
+
         ])
 
         self.transformEyeL = transforms.Compose([
@@ -101,51 +97,9 @@ class ITrackerData(data.Dataset):
             im = cv2.imread(path)
         except OSError:
             raise RuntimeError('Could not read image: ' + path)
-            #im = Image.new("RGB", self.imSize, "white")
 
         return im
-    # def trans(self, data, stage):
-    #     # applying transformation
-    #     self.data = data
-    #     if stage == 0:
-    #         self.data = transforms.Compose([
-    #             transforms.Resize(self.imSize),
-    #             transforms.ToTensor()
-    #         ])
-    #         return self.data
-    #     elif stage == 1:
-    #        self.data = transforms.Compose([
-    #             transforms.Resize(self.imSize),
-    #             transforms.ToTensor()
-    #         ])
-    #        return self.data
-    #     else:
-    #         self.data = transforms.Compose([
-    #             transforms.Resize(self.imSize),
-    #             transforms.ToTensor()
-    #         ])
-    #         return self.data
 
-    def Facegrid(self, xLo, yLo, w, h):
-        gridH = self.gridSize[0]
-        gridW = self.gridSize[1]
-        grid = np.zeros(shape=(gridH, gridW))
-
-        xHi = xLo + w
-        yHi = yLo + h
-
-        # Clamp the values in the range.
-        xLo = int(min(gridW, max(0, xLo)))
-        xHi = int(min(gridW, max(0, xHi)))
-        yLo = int(min(gridH, max(0, yLo)))
-        yHi = int(min(gridH, max(0, yHi)))
-
-        faceLocation = np.ones((yHi - yLo, xHi - xLo))
-        grid[yLo:yHi, xLo:xHi] = faceLocation
-        grid = np.transpose(grid)
-        labelfg = grid.flatten()
-
-        return labelfg
     def __getitem__(self, index):
         index = self.indices[index]
 
@@ -177,7 +131,6 @@ class ITrackerData(data.Dataset):
         br_x = tl_x_face + w
         br_y = tl_y_face + h
         face = img[tl_y_face:br_y, tl_x_face:br_x]
-        # cv2.imwrite(r'D:\facefile.jpg', face)
 
         # get left eye
         tl_x = tl_x_face + int(left_json["X"][idx])
@@ -187,7 +140,6 @@ class ITrackerData(data.Dataset):
         br_x = tl_x + w
         br_y = tl_y + h
         left_eye = img[tl_y:br_y, tl_x:br_x]
-        # cv2.imwrite(r'D:\Leyefile.jpg', left_eye)
 
         # get right eye
         tl_x = tl_x_face + int(right_json["X"][idx])
@@ -197,64 +149,21 @@ class ITrackerData(data.Dataset):
         br_x = tl_x + w
         br_y = tl_y + h
         right_eye = img[tl_y:br_y, tl_x:br_x]
-        # cv2.imwrite(r'D:\righteyefile.jpg', right_eye)
-
-        # # normalize the images
-        # face = image_normalization(face)
-        # left_eye = image_normalization(left_eye)
-        # right_eye = image_normalization(right_eye)
-
-        # plt.imshow(face)
-        # plt.show(True)
-
-        # resizing the array
-
-        # face = np.resize(face, new_shape=(self.imSize, 3))
-        # left_eye = np.resize(left_eye, new_shape=(self.imSize, 3))
-        # right_eye = np.resize(right_eye, new_shape=(self.imSize, 3))
 
         # resize images
         face = cv2.resize(face, self.imSize)
         left_eye = cv2.resize(left_eye, self.imSize)
         right_eye = cv2.resize(right_eye, self.imSize)
         #
-        # taking transpose
+        # normalize image to range [0, 1]
+        face = image_normalization(face)
+        left_eye = image_normalization(left_eye)
+        right_eye = image_normalization(right_eye)
 
         imFace = self.transformFace(face)
         imEyeL = self.transformEyeL(left_eye)
         imEyeR = self.transformEyeR(right_eye)
-        # plt.imshow(face)
-        # plt.show(True)
-        # now convert to tensors
-        # imFace = torch.FloatTensor(face)
-        # imEyeL = torch.FloatTensor(left_eye)
-        # imEyeR = torch.FloatTensor(right_eye)
-        #
-        # # subracting the mean from each image
-        # imFace = SubtractMean(imFace, meanImg=self.faceMean)
-        # imEyeL = SubtractMean(imEyeL, meanImg=self.eyeLeftMean)
-        # imEyeR = SubtractMean(imEyeR, meanImg=self.eyeRightMean)
-        # plt.imshow(face)
-        # plt.show(True)
 
-        #
-        # imFace = torch.from_numpy(np.squeeze(face))
-        # imEyeL = torch.from_numpy(np.squeeze(left_eye))
-        # imEyeR = torch.from_numpy(np.squeeze(right_eye))
-
-        # # conversion from ndarry to PIL image
-        # face = Image.fromarray(np.uint8(face))
-        # left_eye = Image.fromarray(np.uint8(left_eye))
-        # right_eye = Image.fromarray(np.uint8(right_eye))
-        # plt.isinteractive()
-        # transformation applied on face, left and right eyes images
-        # imFace = self.transformFace(face)
-        # imEyeL = self.transformEyeL(left_eye)
-        # imEyeR = self.transformEyeR(right_eye)
-        # plt.isinteractive()
-        # plt.imshow(imFace)
-
-        # plt.show(block=True)
         # open facegrid and gaze labels
         dot_file = open(join(DATASET_PATH + r'/' + recNum + r'/dotInfo.json'))
         fg_file = open(join(DATASET_PATH + r'/' + recNum + r'/faceGrid.json'))
@@ -269,15 +178,16 @@ class ITrackerData(data.Dataset):
         gaze = [y_x, y_y]
 
         # face grid making
-        fg_X = fg_json['X'][idx]
-        fg_Y = fg_json['Y'][idx]
-        fg_H = fg_json['H'][idx]
-        fg_W = fg_json['W'][idx]
-
-        # facegrid for face
-        faceGrid = self.Facegrid(fg_X, fg_Y, fg_W, fg_H)
-        # faceGrid = self.makeGrid(param)
-
+        face_grid = np.zeros(shape=(self.gridSize[0], self.gridSize[1]))
+        fg_X = int(fg_json['X'][idx])
+        fg_Y = int(fg_json['Y'][idx])
+        fg_H = int(fg_json['H'][idx])
+        fg_W = int(fg_json['W'][idx])
+        br_x = fg_X + fg_W
+        br_y = fg_Y + fg_H
+        face_grid[fg_Y:br_y, fg_X:br_x] = 1
+        face_grid = np.transpose(face_grid)
+        faceGrid = face_grid.flatten()
 
         # to tensor
         row = torch.LongTensor([int(index)])
@@ -291,18 +201,18 @@ class ITrackerData(data.Dataset):
 
 #
 # if __name__ == '__main__':
-#     pass
-    # batch_size = 50
-    # imSize = (224, 224)
-    # workers = 2
-    # dataTrain = ITrackerData(split='train', imSize = imSize)
-    # train_loader = torch.utils.data.DataLoader(
-    #     dataTrain,
-    #     batch_size=batch_size, shuffle=True,
-    #     num_workers=workers, pin_memory=True)
-    #
-    # for i, (row, imFace, imEyeL, imEyeR, faceGrid, gaze) in enumerate(train_loader):
-    #     print('images loaded successfully....')
-    #
+#     # pass
+#     batch_size = 10
+#     imSize = (224, 224)
+#     workers = 2
+#     dataTrain = ITrackerData(split='train', imSize = imSize)
+#     train_loader = torch.utils.data.DataLoader(
+#         dataTrain,
+#         batch_size=batch_size, shuffle=True,
+#         num_workers=workers, pin_memory=True)
+#
+#     for i, (row, imFace, imEyeL, imEyeR, faceGrid, gaze) in enumerate(train_loader):
+#         print('images loaded successfully....')
+
 
 
