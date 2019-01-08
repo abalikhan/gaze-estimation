@@ -106,11 +106,11 @@ class FaceImageModel(nn.Module):
         self.fc = nn.Sequential(
             nn.Linear(7 * 7 * 512, 256),
             # nn.Dropout(0.3),
-            nn.ELU(inplace=True),
+            nn.ReLU(inplace=True),
             nn.Linear(256, 128),
-            nn.ELU(inplace=True),
+            nn.ReLU(inplace=True),
             nn.Linear(128, 64),
-            nn.ELU(inplace=True)
+            nn.ReLU(inplace=True)
         )
 
     def forward(self, x):
@@ -152,7 +152,7 @@ class ITrackerModel(nn.Module):
         # Joining everything
         self.fc = nn.Sequential(
             nn.Linear(128 + 64 + 128, 128),
-            nn.Dropout(0.4),
+            nn.Dropout(0.3),
             nn.ReLU(inplace=True),
             nn.Linear(128, 2),
         )

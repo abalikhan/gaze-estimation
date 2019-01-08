@@ -10,13 +10,13 @@ import deepdish as dd
 import matplotlib.pyplot as plt
 
 #
-# DATASET_PATH = r'D:\gazecapture'
-# meta_file = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\Eyetracking_pytorch\meta_file.h5'
-# MEAN_PATH = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
+DATASET_PATH = r'D:\gazecapture'
+meta_file = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch\meta_small.h5'
+MEAN_PATH = r'C:\Users\Aliab\PycharmProjects\Implement_pytorch'
 
-DATASET_PATH = '../data'
-meta_file = '../Eyetracking_pytorch/meta_file.h5'
-MEAN_PATH = '../Eyetracking_pytorch'
+# DATASET_PATH = '../data'
+# meta_file = '../Eyetracking_pytorch/meta_file.h5'
+# MEAN_PATH = '../Eyetracking_pytorch'
 
 # normalize a single image
 def image_normalization(img):
@@ -81,6 +81,17 @@ class ITrackerData(data.Dataset):
             SubtractMean(meanImg=self.eyeRightMean),
         ])
 
+        # sklearn(valSet + testSet + trainingSet, )
+        # valSet = []
+        # testSet = []
+        # trainingSet = []
+        #
+        # totalLength = len(valSet) + len(testSet) + len(trainingSet)
+        #
+        # self.data['maskTr'] = len(valSet)
+        # self.data['maskVl'] =
+        # self.data['maskTs'] =
+
         self.split = split
         if split == 'train':
             mask = self.data['maskTr']
@@ -90,6 +101,7 @@ class ITrackerData(data.Dataset):
             mask = self.data['maskTs']
 
         self.indices = np.argwhere(mask)[:,0]
+        # self.indices[0] = valData
         print('dataset is split with %s having %d images' %(split, len(self.indices)))
 
     def loadImage(self, path):
@@ -200,19 +212,19 @@ class ITrackerData(data.Dataset):
         return len(self.indices)
 
 #
-# if __name__ == '__main__':
-#     # pass
-#     batch_size = 10
-#     imSize = (224, 224)
-#     workers = 2
-#     dataTrain = ITrackerData(split='train', imSize = imSize)
-#     train_loader = torch.utils.data.DataLoader(
-#         dataTrain,
-#         batch_size=batch_size, shuffle=True,
-#         num_workers=workers, pin_memory=True)
-#
-#     for i, (row, imFace, imEyeL, imEyeR, faceGrid, gaze) in enumerate(train_loader):
-#         print('images loaded successfully....')
+if __name__ == '__main__':
+    # pass
+    batch_size = 10
+    imSize = (224, 224)
+    workers = 2
+    dataTrain = ITrackerData(split='val', imSize = imSize)
+    train_loader = torch.utils.data.DataLoader(
+        dataTrain,
+        batch_size=10, shuffle=True,
+        num_workers=workers, pin_memory=True)
+    for i, (row, imface, imL, imR, fg, gaze) in enumerate(train_loader):
+        print(i)
+    print('images loaded successfully....')
 
 
 
