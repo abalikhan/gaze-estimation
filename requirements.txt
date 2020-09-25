@@ -29,5 +29,5 @@ Werkzeug==0.12.2
 sgfmill==1.0.0
 opencv-contrib-python
 keras==2.2.4
-tensorflow-gpu==1.7.0
+tensorflow-gpu==1.15.4
 scikit-learn
